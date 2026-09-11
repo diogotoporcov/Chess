@@ -1,11 +1,37 @@
 ﻿using Chess.Core.Board;
+using Chess.Core.Board.Regions;
 using Chess.Core.Movement;
+using Chess.Core.Movement.Conditions;
+using Chess.Core.Movement.Orientation;
 using Chess.Core.Movement.Patterns;
 
 namespace Chess.Core.Pieces;
 
 public static class StandardPieceDefinitions
 {
+    public static PieceDefinition Pawn { get; } = new(
+        new PieceDefinitionId("chess:pawn"),
+        "Pawn",
+        new SlidingMovementPattern(
+            StandardRelativeDirections.Forward,
+            maxDistance: 1,
+            targetMode: MovementTargetMode.MoveOnly),
+        new SlidingMovementPattern(
+            StandardRelativeDirections.ForwardLeft,
+            maxDistance: 1,
+            targetMode: MovementTargetMode.CaptureOnly),
+        new SlidingMovementPattern(
+            StandardRelativeDirections.ForwardRight,
+            maxDistance: 1,
+            targetMode: MovementTargetMode.CaptureOnly),
+        new ConditionalMovementPattern(
+            new OriginInRegionCondition(
+                StandardChessBoardRegions.PawnStarting),
+            new PathMovementPattern(
+                MovementTargetMode.MoveOnly,
+                StandardRelativeDirections.Forward,
+                StandardRelativeDirections.Forward)));
+
     public static PieceDefinition Rook { get; } = new(
         new PieceDefinitionId("chess:rook"),
         "Rook",
