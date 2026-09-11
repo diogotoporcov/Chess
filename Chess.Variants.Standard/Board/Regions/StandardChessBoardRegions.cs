@@ -1,14 +1,10 @@
-using Chess.Variants.Standard.Sides;
 using Chess.Core.Board.Regions;
-using Chess.Core.Board;
-using Chess.Core.Sides;
+using Chess.Variants.Standard.Sides;
 
 namespace Chess.Variants.Standard.Board.Regions;
 
 public static class StandardChessBoardRegions
 {
-    private const int BoardSideDimension = 8;
-
     private const int BlackPawnStartingRow = 1;
     private const int WhitePawnStartingRow = 6;
 
@@ -31,12 +27,7 @@ public static class StandardChessBoardRegions
         int row)
     {
         return new BoardRegion(
-            Enumerable
-                .Range(0, BoardSideDimension)
-                .Select(
-                    column =>
-                        new Square(
-                            row * BoardSideDimension +
-                            column)));
+            StandardChessBoardGeometry.GetRow(
+                row));
     }
 }
