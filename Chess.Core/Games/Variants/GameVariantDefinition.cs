@@ -1,6 +1,7 @@
 ﻿using Chess.Core.Board;
 using Chess.Core.Board.Regions;
 using Chess.Core.Board.Topology;
+using Chess.Core.Games.Status;
 using Chess.Core.Movement;
 using Chess.Core.Movement.Orientation;
 using Chess.Core.Pieces;
@@ -9,20 +10,17 @@ namespace Chess.Core.Games.Variants;
 
 public sealed class GameVariantDefinition
 {
-    private readonly IReadOnlyList<InitialPiecePlacement>
-        _initialPlacements;
+    private readonly IReadOnlyList<InitialPiecePlacement> _initialPlacements;
 
-    private readonly IRelativeDirectionResolver
-        _relativeDirectionResolver;
+    private readonly IRelativeDirectionResolver _relativeDirectionResolver;
 
-    private readonly IBoardRegionResolver
-        _boardRegionResolver;
+    private readonly IBoardRegionResolver _boardRegionResolver;
 
-    private readonly IGameMoveGenerator
-        _moveGenerator;
+    private readonly IGameMoveGenerator _moveGenerator;
 
-    private readonly IMoveExecutionResolver
-        _moveExecutionResolver;
+    private readonly IMoveExecutionResolver _moveExecutionResolver;
+
+    private readonly IGameStatusEvaluator _statusEvaluator;
 
     public GameVariantId Id { get; }
 
@@ -32,9 +30,7 @@ public sealed class GameVariantDefinition
 
     public TurnOrder TurnOrder { get; }
 
-    public IReadOnlyList<InitialPiecePlacement>
-        InitialPlacements =>
-            _initialPlacements;
+    public IReadOnlyList<InitialPiecePlacement> InitialPlacements => _initialPlacements;
 
     public GameVariantDefinition(
         GameVariantId id,
@@ -45,6 +41,7 @@ public sealed class GameVariantDefinition
         IBoardRegionResolver boardRegionResolver,
         IGameMoveGenerator moveGenerator,
         IMoveExecutionResolver moveExecutionResolver,
+        IGameStatusEvaluator statusEvaluator,
         params InitialPiecePlacement[] initialPlacements)
     {
         ArgumentNullException.ThrowIfNull(id);
@@ -62,6 +59,7 @@ public sealed class GameVariantDefinition
         ArgumentNullException.ThrowIfNull(boardRegionResolver);
         ArgumentNullException.ThrowIfNull(moveGenerator);
         ArgumentNullException.ThrowIfNull(moveExecutionResolver);
+        ArgumentNullException.ThrowIfNull(statusEvaluator);
         ArgumentNullException.ThrowIfNull(initialPlacements);
 
         if (initialPlacements
@@ -104,6 +102,8 @@ public sealed class GameVariantDefinition
 
         _moveExecutionResolver = moveExecutionResolver;
 
+        _statusEvaluator = statusEvaluator;
+
         _initialPlacements = Array.AsReadOnly(
                 [
                     .. initialPlacements
@@ -143,7 +143,8 @@ public sealed class GameVariantDefinition
             this,
             gameState,
             _moveGenerator,
-            moveExecutor);
+            moveExecutor,
+            _statusEvaluator);
     }
 
     public override string ToString()

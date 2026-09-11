@@ -22,7 +22,8 @@ public static class Variant
     private const int WhitePawnRow = 6;
     private const int WhiteBackRankRow = 7;
 
-    public static GameVariantDefinition Definition { get; } = CreateDefinition();
+    public static GameVariantDefinition Definition { get; } =
+        CreateDefinition();
 
     public static Game CreateGame()
     {
@@ -37,11 +38,16 @@ public static class Variant
 
         var checkDetector = new CheckDetector(attackGenerator);
 
-        var moveGenerator =
+        var legalMoveGenerator =
             new LegalMoveGenerator(
                 new PseudoLegalGameMoveGenerator(),
                 new GameMoveSimulator(
                     executionResolver),
+                checkDetector);
+
+        var statusEvaluator =
+            new StatusEvaluator(
+                legalMoveGenerator,
                 checkDetector);
 
         return new GameVariantDefinition(
@@ -51,8 +57,9 @@ public static class Variant
             TurnOrderDefinition.Instance,
             Orientations.Resolver,
             BoardRegions.Resolver,
-            moveGenerator,
+            legalMoveGenerator,
             executionResolver,
+            statusEvaluator,
             CreateInitialPlacements());
     }
 

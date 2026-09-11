@@ -1,4 +1,5 @@
 ﻿using Chess.Core.Board;
+using Chess.Core.Games.Status;
 using Chess.Core.Games.Variants;
 using Chess.Core.Movement;
 
@@ -10,6 +11,8 @@ public sealed class Game
 
     private readonly GameMoveExecutor _moveExecutor;
 
+    private readonly IGameStatusEvaluator _statusEvaluator;
+
     public GameVariantDefinition Variant { get; }
 
     public GameState State { get; }
@@ -17,22 +20,27 @@ public sealed class Game
     public BoardState BoardState =>
         State.BoardState;
 
+    public GameStatus Status => _statusEvaluator.Evaluate(State);
+
     internal Game(
         GameVariantDefinition variant,
         GameState state,
         IGameMoveGenerator moveGenerator,
-        GameMoveExecutor moveExecutor)
+        GameMoveExecutor moveExecutor,
+        IGameStatusEvaluator statusEvaluator)
     {
         ArgumentNullException.ThrowIfNull(variant);
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(moveGenerator);
         ArgumentNullException.ThrowIfNull(moveExecutor);
+        ArgumentNullException.ThrowIfNull(statusEvaluator);
 
         Variant = variant;
         State = state;
 
         _moveGenerator = moveGenerator;
         _moveExecutor = moveExecutor;
+        _statusEvaluator = statusEvaluator;
     }
 
     public IEnumerable<Move> GenerateMoves(
@@ -46,6 +54,14 @@ public sealed class Game
     public GameMoveRecord Execute(
         Move move)
     {
+        var status = _statusEvaluator.Evaluate(State);
+
+        if (status.IsTerminal)
+        {
+            throw new InvalidOperationException(
+                "Cannot execute a move after the game has ended.");
+        }
+
         return _moveExecutor.Execute(
             State,
             move);
