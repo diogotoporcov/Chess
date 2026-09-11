@@ -7,11 +7,15 @@ public sealed class SlidingMovementPattern : IMovementPattern
 {
     private readonly Direction _direction;
     private readonly int? _maxDistance;
+    private readonly MovementTargetMode _targetMode;
 
     public SlidingMovementPattern(
         Direction direction,
-        int? maxDistance = null)
+        int? maxDistance = null,
+        MovementTargetMode targetMode = MovementTargetMode.MoveOrCapture)
     {
+        ArgumentNullException.ThrowIfNull(direction);
+
         if (maxDistance is <= 0)
         {
             throw new ArgumentOutOfRangeException(
@@ -19,8 +23,17 @@ public sealed class SlidingMovementPattern : IMovementPattern
                 "Maximum distance must be greater than zero.");
         }
 
+        if (!Enum.IsDefined(targetMode))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(targetMode),
+                targetMode,
+                "Unsupported movement target mode.");
+        }
+
         _direction = direction;
         _maxDistance = maxDistance;
+        _targetMode = targetMode;
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
@@ -29,6 +42,7 @@ public sealed class SlidingMovementPattern : IMovementPattern
         Side movingSide)
     {
         ArgumentNullException.ThrowIfNull(boardState);
+        ArgumentNullException.ThrowIfNull(movingSide);
 
         var current = from;
         var distance = 0;
@@ -47,15 +61,27 @@ public sealed class SlidingMovementPattern : IMovementPattern
                     next,
                     out var occupyingPiece))
             {
-                yield return new Move(from, next);
+                if (_targetMode is
+                    MovementTargetMode.MoveOrCapture or
+                    MovementTargetMode.MoveOnly)
+                {
+                    yield return new Move(
+                        from,
+                        next);
+                }
 
                 current = next;
                 continue;
             }
 
-            if (occupyingPiece.Side != movingSide)
+            if (occupyingPiece.Side != movingSide &&
+                _targetMode is
+                    MovementTargetMode.MoveOrCapture or
+                    MovementTargetMode.CaptureOnly)
             {
-                yield return new Move(from, next);
+                yield return new Move(
+                    from,
+                    next);
             }
 
             yield break;

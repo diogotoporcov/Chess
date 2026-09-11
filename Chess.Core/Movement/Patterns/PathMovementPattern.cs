@@ -6,8 +6,18 @@ namespace Chess.Core.Movement.Patterns;
 public sealed class PathMovementPattern : IMovementPattern
 {
     private readonly Direction[] _path;
+    private readonly MovementTargetMode _targetMode;
 
     public PathMovementPattern(
+        params Direction[] path)
+        : this(
+            MovementTargetMode.MoveOrCapture,
+            path)
+    {
+    }
+
+    public PathMovementPattern(
+        MovementTargetMode targetMode,
         params Direction[] path)
     {
         ArgumentNullException.ThrowIfNull(path);
@@ -19,10 +29,20 @@ public sealed class PathMovementPattern : IMovementPattern
                 nameof(path));
         }
 
+        if (!Enum.IsDefined(targetMode))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(targetMode),
+                targetMode,
+                "Unsupported movement target mode.");
+        }
+
         _path =
         [
             .. path
         ];
+
+        _targetMode = targetMode;
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
@@ -31,6 +51,7 @@ public sealed class PathMovementPattern : IMovementPattern
         Side movingSide)
     {
         ArgumentNullException.ThrowIfNull(boardState);
+        ArgumentNullException.ThrowIfNull(movingSide);
 
         var current = from;
 
@@ -44,7 +65,8 @@ public sealed class PathMovementPattern : IMovementPattern
                 yield break;
             }
 
-            var isDestination = index == _path.Length - 1;
+            var isDestination =
+                index == _path.Length - 1;
 
             if (!isDestination)
             {
@@ -61,19 +83,29 @@ public sealed class PathMovementPattern : IMovementPattern
                     next,
                     out var occupyingPiece))
             {
-                yield return new Move(
-                    from,
-                    next);
+                if (_targetMode is
+                    MovementTargetMode.MoveOrCapture or
+                    MovementTargetMode.MoveOnly)
+                {
+                    yield return new Move(
+                        from,
+                        next);
+                }
 
                 yield break;
             }
 
-            if (occupyingPiece.Side != movingSide)
+            if (occupyingPiece.Side != movingSide &&
+                _targetMode is
+                    MovementTargetMode.MoveOrCapture or
+                    MovementTargetMode.CaptureOnly)
             {
                 yield return new Move(
                     from,
                     next);
             }
+
+            yield break;
         }
     }
 }

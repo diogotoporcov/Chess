@@ -7,13 +7,24 @@ namespace Chess.Core.Movement.Patterns;
 public sealed class LeapingMovementPattern : IMovementPattern
 {
     private readonly Displacement _displacement;
+    private readonly MovementTargetMode _targetMode;
 
     public LeapingMovementPattern(
-        Displacement displacement)
+        Displacement displacement,
+        MovementTargetMode targetMode = MovementTargetMode.MoveOrCapture)
     {
         ArgumentNullException.ThrowIfNull(displacement);
-        
+
+        if (!Enum.IsDefined(targetMode))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(targetMode),
+                targetMode,
+                "Unsupported movement target mode.");
+        }
+
         _displacement = displacement;
+        _targetMode = targetMode;
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
@@ -22,6 +33,7 @@ public sealed class LeapingMovementPattern : IMovementPattern
         Side movingSide)
     {
         ArgumentNullException.ThrowIfNull(boardState);
+        ArgumentNullException.ThrowIfNull(movingSide);
 
         var destinations = ResolveDestinations(
             boardState.Topology,
@@ -33,14 +45,22 @@ public sealed class LeapingMovementPattern : IMovementPattern
                     destination,
                     out var occupyingPiece))
             {
-                yield return new Move(
-                    from, 
-                    destination);
-                
+                if (_targetMode is
+                    MovementTargetMode.MoveOrCapture or
+                    MovementTargetMode.MoveOnly)
+                {
+                    yield return new Move(
+                        from,
+                        destination);
+                }
+
                 continue;
             }
 
-            if (occupyingPiece.Side != movingSide)
+            if (occupyingPiece.Side != movingSide &&
+                _targetMode is
+                    MovementTargetMode.MoveOrCapture or
+                    MovementTargetMode.CaptureOnly)
             {
                 yield return new Move(
                     from,
@@ -53,12 +73,13 @@ public sealed class LeapingMovementPattern : IMovementPattern
         BoardTopology topology,
         Square from)
     {
-        var components = _displacement.Components.ToArray();
+        var components =
+            _displacement.Components.ToArray();
 
         var remainingSteps = components
             .Select(component => component.Distance)
             .ToArray();
-        
+
         var destinations = new HashSet<Square>();
 
         Resolve(
@@ -68,7 +89,7 @@ public sealed class LeapingMovementPattern : IMovementPattern
             remainingSteps,
             remainingSteps.Sum(),
             destinations);
-        
+
         return destinations;
     }
 
@@ -85,15 +106,18 @@ public sealed class LeapingMovementPattern : IMovementPattern
             destinations.Add(current);
             return;
         }
-        
-        for (var index = 0; index < components.Count; index++)
+
+        for (var index = 0;
+             index < components.Count;
+             index++)
         {
             if (remainingSteps[index] == 0)
             {
                 continue;
             }
-            
-            var direction = components[index].Direction;
+
+            var direction =
+                components[index].Direction;
 
             if (!topology.TryGetNext(
                     current,
@@ -104,15 +128,15 @@ public sealed class LeapingMovementPattern : IMovementPattern
             }
 
             remainingSteps[index]--;
-            
+
             Resolve(
                 topology,
                 next,
-                components, 
-                remainingSteps, 
-                remainingDistance - 1, 
+                components,
+                remainingSteps,
+                remainingDistance - 1,
                 destinations);
-            
+
             remainingSteps[index]++;
         }
     }
