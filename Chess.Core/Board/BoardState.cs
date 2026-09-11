@@ -2,13 +2,13 @@
 using Chess.Core.Board.Topology;
 using Chess.Core.Board.Transitions;
 using Chess.Core.Pieces;
+using Chess.Core.Sides;
 
 namespace Chess.Core.Board;
 
 public sealed class BoardState
 {
     private readonly Dictionary<Square, Piece> _pieces = [];
-    
     private readonly Dictionary<Piece, Square> _pieceSquares = new(ReferenceEqualityComparer.Instance);
 
     public BoardTopology Topology { get; }
@@ -49,6 +49,14 @@ public sealed class BoardState
         return _pieceSquares.TryGetValue(
             piece,
             out square);
+    }
+
+    public IEnumerable<PiecePosition> GetPiecePositions(
+        Side side)
+    {
+        ArgumentNullException.ThrowIfNull(side);
+
+        return EnumeratePiecePositions(side);
     }
 
     public void PlacePiece(
@@ -115,6 +123,23 @@ public sealed class BoardState
         ApplyChanges(
             transition,
             reverse: true);
+    }
+
+    private IEnumerable<PiecePosition>
+        EnumeratePiecePositions(
+            Side side)
+    {
+        foreach (var entry in _pieces)
+        {
+            if (entry.Value.Side != side)
+            {
+                continue;
+            }
+
+            yield return new PiecePosition(
+                entry.Key,
+                entry.Value);
+        }
     }
 
     private void ApplyChanges(

@@ -9,4 +9,9 @@ public interface IMovementPattern
         MovementContext context,
         Square from,
         Side movingSide);
+
+    IEnumerable<Square> GenerateAttackedSquares(
+        MovementContext context,
+        Square from,
+        Side attackingSide);
 }

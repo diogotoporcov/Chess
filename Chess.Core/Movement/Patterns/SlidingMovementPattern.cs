@@ -94,4 +94,47 @@ public sealed class SlidingMovementPattern :
             yield break;
         }
     }
+
+    public IEnumerable<Square> GenerateAttackedSquares(
+        MovementContext context,
+        Square from,
+        Side attackingSide)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(attackingSide);
+
+        if (_targetMode == MovementTargetMode.MoveOnly)
+        {
+            yield break;
+        }
+
+        var boardState = context.BoardState;
+
+        var direction = _direction.Resolve(
+            context,
+            attackingSide);
+
+        var current = from;
+        var distance = 0;
+
+        while (
+            (!_maxDistance.HasValue ||
+             distance < _maxDistance.Value) &&
+            boardState.Topology.TryGetNext(
+                current,
+                direction,
+                out var next))
+        {
+            distance++;
+
+            yield return next;
+
+            if (boardState.IsOccupied(next))
+            {
+                yield break;
+            }
+
+            current = next;
+        }
+    }
 }

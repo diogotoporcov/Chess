@@ -7,6 +7,7 @@ namespace Chess.Core.Pieces;
 public sealed class Piece
 {
     public Side Side { get; }
+
     public PieceDefinition Definition { get; }
 
     public Piece(
@@ -26,18 +27,9 @@ public sealed class Piece
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var boardState = context.BoardState;
-
-        if (!boardState.TryGetPiece(
-                from,
-                out var occupyingPiece) ||
-            !ReferenceEquals(
-                occupyingPiece,
-                this))
-        {
-            throw new InvalidOperationException(
-                "This piece is not placed on the specified square.");
-        }
+        EnsurePlacedAt(
+            context.BoardState,
+            from);
 
         var generatedMoves = new HashSet<Move>();
 
@@ -54,6 +46,50 @@ public sealed class Piece
                     yield return move;
                 }
             }
+        }
+    }
+
+    public IEnumerable<Square> GenerateAttackedSquares(
+        MovementContext context,
+        Square from)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        EnsurePlacedAt(
+            context.BoardState,
+            from);
+
+        var attackedSquares = new HashSet<Square>();
+
+        foreach (var pattern in Definition.MovementPatterns)
+        {
+            foreach (var square in pattern
+                         .GenerateAttackedSquares(
+                             context,
+                             from,
+                             Side))
+            {
+                if (attackedSquares.Add(square))
+                {
+                    yield return square;
+                }
+            }
+        }
+    }
+
+    private void EnsurePlacedAt(
+        BoardState boardState,
+        Square square)
+    {
+        if (!boardState.TryGetPiece(
+                square,
+                out var occupyingPiece) ||
+            !ReferenceEquals(
+                occupyingPiece,
+                this))
+        {
+            throw new InvalidOperationException(
+                "This piece is not placed on the specified square.");
         }
     }
 }

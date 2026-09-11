@@ -116,4 +116,51 @@ public sealed class PathMovementPattern :
             yield break;
         }
     }
+
+    public IEnumerable<Square> GenerateAttackedSquares(
+        MovementContext context,
+        Square from,
+        Side attackingSide)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(attackingSide);
+
+        if (_targetMode == MovementTargetMode.MoveOnly)
+        {
+            yield break;
+        }
+
+        var boardState = context.BoardState;
+        var current = from;
+
+        for (var index = 0; index < _path.Length; index++)
+        {
+            var direction = _path[index].Resolve(
+                context,
+                attackingSide);
+
+            if (!boardState.Topology.TryGetNext(
+                    current,
+                    direction,
+                    out var next))
+            {
+                yield break;
+            }
+
+            var isDestination = index == _path.Length - 1;
+
+            if (isDestination)
+            {
+                yield return next;
+                yield break;
+            }
+
+            if (boardState.IsOccupied(next))
+            {
+                yield break;
+            }
+
+            current = next;
+        }
+    }
 }

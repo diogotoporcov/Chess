@@ -4,10 +4,13 @@ using Chess.Core.Sides;
 
 namespace Chess.Core.Movement.Patterns;
 
-public sealed class ConditionalMovementPattern : IMovementPattern
+public sealed class ConditionalMovementPattern :
+    IMovementPattern
 {
     private readonly IMovementCondition _condition;
-    private readonly IMovementPattern _movementPattern;
+
+    private readonly IMovementPattern
+        _movementPattern;
 
     public ConditionalMovementPattern(
         IMovementCondition condition,
@@ -36,12 +39,39 @@ public sealed class ConditionalMovementPattern : IMovementPattern
             yield break;
         }
 
-        foreach (var move in _movementPattern.GeneratePseudoLegalMoves( 
-                     context,
-                     from,
-                     movingSide))
+        foreach (var move in _movementPattern
+                     .GeneratePseudoLegalMoves(
+                         context,
+                         from,
+                         movingSide))
         {
             yield return move;
+        }
+    }
+
+    public IEnumerable<Square> GenerateAttackedSquares(
+        MovementContext context,
+        Square from,
+        Side attackingSide)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(attackingSide);
+
+        if (!_condition.IsSatisfied(
+                context,
+                from,
+                attackingSide))
+        {
+            yield break;
+        }
+
+        foreach (var square in _movementPattern
+                     .GenerateAttackedSquares(
+                         context,
+                         from,
+                         attackingSide))
+        {
+            yield return square;
         }
     }
 }

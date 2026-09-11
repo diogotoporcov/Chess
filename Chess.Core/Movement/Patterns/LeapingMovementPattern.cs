@@ -4,7 +4,8 @@ using Chess.Core.Sides;
 
 namespace Chess.Core.Movement.Patterns;
 
-public sealed class LeapingMovementPattern : IMovementPattern
+public sealed class LeapingMovementPattern :
+    IMovementPattern
 {
     private readonly Displacement _displacement;
     private readonly MovementTargetMode _targetMode;
@@ -72,6 +73,28 @@ public sealed class LeapingMovementPattern : IMovementPattern
         }
     }
 
+    public IEnumerable<Square> GenerateAttackedSquares(
+        MovementContext context,
+        Square from,
+        Side attackingSide)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(attackingSide);
+
+        if (_targetMode == MovementTargetMode.MoveOnly)
+        {
+            yield break;
+        }
+
+        foreach (var destination in ResolveDestinations(
+                     context,
+                     from,
+                     attackingSide))
+        {
+            yield return destination;
+        }
+    }
+
     private IReadOnlySet<Square> ResolveDestinations(
         MovementContext context,
         Square from,
@@ -120,9 +143,7 @@ public sealed class LeapingMovementPattern : IMovementPattern
             return;
         }
 
-        for (var index = 0;
-             index < directions.Count;
-             index++)
+        for (var index = 0; index < directions.Count; index++)
         {
             if (remainingSteps[index] == 0)
             {
