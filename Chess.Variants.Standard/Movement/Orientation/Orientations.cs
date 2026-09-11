@@ -1,92 +1,90 @@
-using Chess.Variants.Standard.Sides;
 using Chess.Core.Movement.Orientation;
 using Chess.Core.Board;
-using Chess.Core.Sides;
 
 namespace Chess.Variants.Standard.Movement.Orientation;
 
-public static class StandardChessOrientations
+public static class Orientations
 {
     public static IRelativeDirectionResolver Resolver { get; } =
         new SideOrientationMap(
             (
-                StandardSides.White,
+                Sides.SideDefinitions.White,
                 StandardRelativeDirections.Forward,
                 CompassDirections.North
             ),
             (
-                StandardSides.White,
+                Sides.SideDefinitions.White,
                 StandardRelativeDirections.ForwardRight,
                 CompassDirections.NorthEast
             ),
             (
-                StandardSides.White,
+                Sides.SideDefinitions.White,
                 StandardRelativeDirections.Right,
                 CompassDirections.East
             ),
             (
-                StandardSides.White,
+                Sides.SideDefinitions.White,
                 StandardRelativeDirections.BackwardRight,
                 CompassDirections.SouthEast
             ),
             (
-                StandardSides.White,
+                Sides.SideDefinitions.White,
                 StandardRelativeDirections.Backward,
                 CompassDirections.South
             ),
             (
-                StandardSides.White,
+                Sides.SideDefinitions.White,
                 StandardRelativeDirections.BackwardLeft,
                 CompassDirections.SouthWest
             ),
             (
-                StandardSides.White,
+                Sides.SideDefinitions.White,
                 StandardRelativeDirections.Left,
                 CompassDirections.West
             ),
             (
-                StandardSides.White,
+                Sides.SideDefinitions.White,
                 StandardRelativeDirections.ForwardLeft,
                 CompassDirections.NorthWest
             ),
 
             (
-                StandardSides.Black,
+                Sides.SideDefinitions.Black,
                 StandardRelativeDirections.Forward,
                 CompassDirections.South
             ),
             (
-                StandardSides.Black,
+                Sides.SideDefinitions.Black,
                 StandardRelativeDirections.ForwardRight,
                 CompassDirections.SouthWest
             ),
             (
-                StandardSides.Black,
+                Sides.SideDefinitions.Black,
                 StandardRelativeDirections.Right,
                 CompassDirections.West
             ),
             (
-                StandardSides.Black,
+                Sides.SideDefinitions.Black,
                 StandardRelativeDirections.BackwardRight,
                 CompassDirections.NorthWest
             ),
             (
-                StandardSides.Black,
+                Sides.SideDefinitions.Black,
                 StandardRelativeDirections.Backward,
                 CompassDirections.North
             ),
             (
-                StandardSides.Black,
+                Sides.SideDefinitions.Black,
                 StandardRelativeDirections.BackwardLeft,
                 CompassDirections.NorthEast
             ),
             (
-                StandardSides.Black,
+                Sides.SideDefinitions.Black,
                 StandardRelativeDirections.Left,
                 CompassDirections.East
             ),
             (
-                StandardSides.Black,
+                Sides.SideDefinitions.Black,
                 StandardRelativeDirections.ForwardLeft,
                 CompassDirections.SouthEast
             ));

@@ -1,9 +1,8 @@
 using Chess.Core.Board.Regions;
-using Chess.Variants.Standard.Sides;
 
 namespace Chess.Variants.Standard.Board.Regions;
 
-public static class StandardChessBoardRegions
+public static class BoardRegions
 {
     private const int BlackPawnStartingRow = 1;
     private const int WhitePawnStartingRow = 6;
@@ -13,12 +12,12 @@ public static class StandardChessBoardRegions
     public static IBoardRegionResolver Resolver { get; } =
         new SideBoardRegionMap(
             (
-                StandardSides.White,
+                Sides.SideDefinitions.White,
                 PawnStarting,
                 CreateRow(WhitePawnStartingRow)
             ),
             (
-                StandardSides.Black,
+                Sides.SideDefinitions.Black,
                 PawnStarting,
                 CreateRow(BlackPawnStartingRow)
             ));
@@ -27,7 +26,7 @@ public static class StandardChessBoardRegions
         int row)
     {
         return new BoardRegion(
-            StandardChessBoardGeometry.GetRow(
+            BoardGeometry.GetRow(
                 row));
     }
 }

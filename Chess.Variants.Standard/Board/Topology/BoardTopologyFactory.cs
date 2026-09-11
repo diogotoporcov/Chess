@@ -3,19 +3,19 @@ using Chess.Core.Board.Topology;
 
 namespace Chess.Variants.Standard.Board.Topology;
 
-public static class StandardChessBoardTopology
+public static class BoardTopologyFactory
 {
     public static BoardTopology Create()
     {
         var builder =
             new BoardTopologyBuilder();
 
-        for (var row = 0; row < StandardChessBoardGeometry.SideDimension; row++)
+        for (var row = 0; row < BoardGeometry.SideDimension; row++)
         {
-            for (var column = 0; column < StandardChessBoardGeometry.SideDimension; column++)
+            for (var column = 0; column < BoardGeometry.SideDimension; column++)
             {
                 builder.AddSquare(
-                    StandardChessBoardGeometry.SquareAt(
+                    BoardGeometry.SquareAt(
                         row,
                         column));
             }
@@ -29,12 +29,12 @@ public static class StandardChessBoardTopology
     private static void ConnectSquares(
         BoardTopologyBuilder builder)
     {
-        for (var row = 0; row < StandardChessBoardGeometry.SideDimension; row++)
+        for (var row = 0; row < BoardGeometry.SideDimension; row++)
         {
-            for (var column = 0; column < StandardChessBoardGeometry.SideDimension; column++)
+            for (var column = 0; column < BoardGeometry.SideDimension; column++)
             {
                 var from =
-                    StandardChessBoardGeometry.SquareAt(
+                    BoardGeometry.SquareAt(
                         row,
                         column);
 
@@ -104,7 +104,7 @@ public static class StandardChessBoardTopology
         int targetColumn,
         Direction direction)
     {
-        if (!StandardChessBoardGeometry.Contains(
+        if (!BoardGeometry.Contains(
                 targetRow,
                 targetColumn))
         {
@@ -114,7 +114,7 @@ public static class StandardChessBoardTopology
         builder.Connect(
             from,
             direction,
-            StandardChessBoardGeometry.SquareAt(
+            BoardGeometry.SquareAt(
                 targetRow,
                 targetColumn));
     }

@@ -1,7 +1,6 @@
 using Chess.Variants.Standard.Board.Regions;
 using Chess.Core.Pieces;
 using Chess.Core.Board;
-using Chess.Core.Board.Regions;
 using Chess.Core.Movement;
 using Chess.Core.Movement.Conditions;
 using Chess.Core.Movement.Orientation;
@@ -9,7 +8,7 @@ using Chess.Core.Movement.Patterns;
 
 namespace Chess.Variants.Standard.Pieces;
 
-public static class StandardPieceDefinitions
+public static class PieceDefinitions
 {
     public static PieceDefinition Pawn { get; } = new(
         new PieceDefinitionId("chess:pawn"),
@@ -28,7 +27,7 @@ public static class StandardPieceDefinitions
             targetMode: MovementTargetMode.CaptureOnly),
         new ConditionalMovementPattern(
             new OriginInRegionCondition(
-                StandardChessBoardRegions.PawnStarting),
+                BoardRegions.PawnStarting),
             new PathMovementPattern(
                 MovementTargetMode.MoveOnly,
                 StandardRelativeDirections.Forward,

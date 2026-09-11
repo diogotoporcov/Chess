@@ -8,11 +8,10 @@ using Chess.Variants.Standard.Board.Topology;
 using Chess.Variants.Standard.Games;
 using Chess.Variants.Standard.Movement.Orientation;
 using Chess.Variants.Standard.Pieces;
-using Chess.Variants.Standard.Sides;
 
 namespace Chess.Variants.Standard;
 
-public static class StandardChessVariant
+public static class Variant
 {
     private const int BlackBackRankRow = 0;
     private const int BlackPawnRow = 1;
@@ -32,10 +31,10 @@ public static class StandardChessVariant
         return new GameVariantDefinition(
             new GameVariantId("chess:standard"),
             "Standard Chess",
-            StandardChessBoardTopology.Create(),
-            StandardChessTurnOrder.Instance,
-            StandardChessOrientations.Resolver,
-            StandardChessBoardRegions.Resolver,
+            BoardTopologyFactory.Create(),
+            TurnOrderDefinition.Instance,
+            Orientations.Resolver,
+            BoardRegions.Resolver,
             new PseudoLegalGameMoveGenerator(),
             new BasicMoveExecutionResolver(),
             CreateInitialPlacements());
@@ -49,22 +48,22 @@ public static class StandardChessVariant
 
         AddPawns(
             placements,
-            StandardSides.Black,
+            Sides.SideDefinitions.Black,
             BlackPawnRow);
 
         AddPawns(
             placements,
-            StandardSides.White,
+            Sides.SideDefinitions.White,
             WhitePawnRow);
 
         AddBackRank(
             placements,
-            StandardSides.Black,
+            Sides.SideDefinitions.Black,
             BlackBackRankRow);
 
         AddBackRank(
             placements,
-            StandardSides.White,
+            Sides.SideDefinitions.White,
             WhiteBackRankRow);
 
         return
@@ -78,15 +77,15 @@ public static class StandardChessVariant
         Side side,
         int row)
     {
-        for (var column = 0; column < StandardChessBoardGeometry.SideDimension; column++)
+        for (var column = 0; column < BoardGeometry.SideDimension; column++)
         {
             placements.Add(
                 new InitialPiecePlacement(
-                    StandardChessBoardGeometry.SquareAt(
+                    BoardGeometry.SquareAt(
                         row,
                         column),
                     side,
-                    StandardPieceDefinitions.Pawn));
+                    PieceDefinitions.Pawn));
         }
     }
 
@@ -97,21 +96,21 @@ public static class StandardChessVariant
     {
         var definitions = new[]
         {
-            StandardPieceDefinitions.Rook,
-            StandardPieceDefinitions.Knight,
-            StandardPieceDefinitions.Bishop,
-            StandardPieceDefinitions.Queen,
-            StandardPieceDefinitions.King,
-            StandardPieceDefinitions.Bishop,
-            StandardPieceDefinitions.Knight,
-            StandardPieceDefinitions.Rook
+            PieceDefinitions.Rook,
+            PieceDefinitions.Knight,
+            PieceDefinitions.Bishop,
+            PieceDefinitions.Queen,
+            PieceDefinitions.King,
+            PieceDefinitions.Bishop,
+            PieceDefinitions.Knight,
+            PieceDefinitions.Rook
         };
 
         for (var column = 0; column < definitions.Length; column++)
         {
             placements.Add(
                 new InitialPiecePlacement(
-                    StandardChessBoardGeometry.SquareAt(
+                    BoardGeometry.SquareAt(
                         row,
                         column),
                     side,

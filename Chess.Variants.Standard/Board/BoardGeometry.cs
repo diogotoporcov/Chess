@@ -2,7 +2,7 @@
 
 namespace Chess.Variants.Standard.Board;
 
-internal static class StandardChessBoardGeometry
+internal static class BoardGeometry
 {
     public const int SideDimension = 8;
 
