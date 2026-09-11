@@ -1,5 +1,5 @@
 ﻿using Chess.Core.Board;
-using Chess.Core.Pieces;
+using Chess.Core.Sides;
 
 namespace Chess.Core.Movement.Patterns;
 
@@ -26,7 +26,7 @@ public sealed class SlidingMovementPattern : IMovementPattern
     public IEnumerable<Move> GeneratePseudoLegalMoves(
         BoardState boardState,
         Square from,
-        PieceColor movingColor)
+        Side movingSide)
     {
         ArgumentNullException.ThrowIfNull(boardState);
 
@@ -53,7 +53,7 @@ public sealed class SlidingMovementPattern : IMovementPattern
                 continue;
             }
 
-            if (occupyingPiece.Color != movingColor)
+            if (occupyingPiece.Side != movingSide)
             {
                 yield return new Move(from, next);
             }

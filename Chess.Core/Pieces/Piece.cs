@@ -1,35 +1,23 @@
 ﻿using Chess.Core.Board;
 using Chess.Core.Movement;
-using Chess.Core.Movement.Patterns;
+using Chess.Core.Sides;
 
 namespace Chess.Core.Pieces;
 
 public sealed class Piece
 {
-    private readonly IMovementPattern[] _movementPatterns;
-
-    public PieceColor Color { get; }
+    public Side Side { get; }
+    public PieceDefinition Definition { get; }
 
     public Piece(
-        PieceColor color,
-        params IMovementPattern[] movementPatterns)
+        Side side,
+        PieceDefinition definition)
     {
-        ArgumentNullException.ThrowIfNull(movementPatterns);
+        ArgumentNullException.ThrowIfNull(side);
+        ArgumentNullException.ThrowIfNull(definition);
 
-        if (movementPatterns.Any(
-                pattern => pattern is null))
-        {
-            throw new ArgumentException(
-                "Movement patterns cannot contain null values.",
-                nameof(movementPatterns));
-        }
-
-        Color = color;
-
-        _movementPatterns =
-        [
-            .. movementPatterns
-        ];
+        Side = side;
+        Definition = definition;
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
@@ -49,13 +37,13 @@ public sealed class Piece
 
         var generatedMoves = new HashSet<Move>();
 
-        foreach (var pattern in _movementPatterns)
+        foreach (var pattern in Definition.MovementPatterns)
         {
             foreach (var move in
                      pattern.GeneratePseudoLegalMoves(
                          boardState,
                          from,
-                         Color))
+                         Side))
             {
                 if (generatedMoves.Add(move))
                 {

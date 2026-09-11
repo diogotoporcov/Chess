@@ -2,9 +2,10 @@
 
 public sealed class Displacement : IEquatable<Displacement>
 {
-    private readonly DisplacementComponent[] _components;
-    
-    public IReadOnlyList<DisplacementComponent> Components => _components;
+    private readonly IReadOnlyList<DisplacementComponent> _components;
+
+    public IReadOnlyList<DisplacementComponent> Components =>
+        _components;
 
     public Displacement(
         params DisplacementComponent[] components)
@@ -15,16 +16,15 @@ public sealed class Displacement : IEquatable<Displacement>
         {
             throw new ArgumentException(
                 "Displacement must contain at least one component.",
-                nameof(components)
-            );
+                nameof(components));
         }
 
-        if (components.Any(component => component.Distance <= 0))
+        if (components.Any(
+                component => component.Distance <= 0))
         {
             throw new ArgumentException(
                 "Displacement distance must be greater than zero.",
-                nameof(components)
-            );
+                nameof(components));
         }
 
         if (components
@@ -33,24 +33,32 @@ public sealed class Displacement : IEquatable<Displacement>
         {
             throw new ArgumentException(
                 "Displacement cannot contain multiple components of the same direction.",
-                nameof(components)
-            );
+                nameof(components));
         }
 
+        var orderedComponents =
+            components
+                .OrderBy(
+                    component => component.Direction.Name,
+                    StringComparer.Ordinal)
+                .ToArray();
+
         _components =
-        [
-            .. components.OrderBy(
-                component => component.Direction.Name,
-                StringComparer.Ordinal)
-        ];
+            Array.AsReadOnly(orderedComponents);
     }
 
     public bool Equals(Displacement? other)
     {
-        return other is not null && 
+        return other is not null &&
                _components.SequenceEqual(other._components);
     }
-    
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Displacement other &&
+               Equals(other);
+    }
+
     public override int GetHashCode()
     {
         var hash = new HashCode();

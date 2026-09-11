@@ -1,6 +1,6 @@
 ﻿namespace Chess.Core.Board;
 
-public readonly record struct Direction
+public sealed record Direction
 {
     public string Name { get; }
 

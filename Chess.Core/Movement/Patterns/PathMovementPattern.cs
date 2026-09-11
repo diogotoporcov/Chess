@@ -1,13 +1,11 @@
 ﻿using Chess.Core.Board;
-using Chess.Core.Pieces;
+using Chess.Core.Sides;
 
 namespace Chess.Core.Movement.Patterns;
 
 public sealed class PathMovementPattern : IMovementPattern
 {
     private readonly Direction[] _path;
-    
-    public IReadOnlyList<Direction> Path => _path;
 
     public PathMovementPattern(
         params Direction[] path)
@@ -18,8 +16,7 @@ public sealed class PathMovementPattern : IMovementPattern
         {
             throw new ArgumentException(
                 "Path must contain at least one direction.",
-                nameof(path)
-            );
+                nameof(path));
         }
 
         _path =
@@ -29,12 +26,12 @@ public sealed class PathMovementPattern : IMovementPattern
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
-        BoardState boardState, 
-        Square from, 
-        PieceColor movingColor)
+        BoardState boardState,
+        Square from,
+        Side movingSide)
     {
         ArgumentNullException.ThrowIfNull(boardState);
-        
+
         var current = from;
 
         for (var index = 0; index < _path.Length; index++)
@@ -46,7 +43,7 @@ public sealed class PathMovementPattern : IMovementPattern
             {
                 yield break;
             }
-            
+
             var isDestination = index == _path.Length - 1;
 
             if (!isDestination)
@@ -67,11 +64,11 @@ public sealed class PathMovementPattern : IMovementPattern
                 yield return new Move(
                     from,
                     next);
-                
+
                 yield break;
             }
 
-            if (occupyingPiece.Color != movingColor)
+            if (occupyingPiece.Side != movingSide)
             {
                 yield return new Move(
                     from,
