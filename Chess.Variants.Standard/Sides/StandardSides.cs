@@ -1,4 +1,5 @@
-﻿namespace Chess.Core.Sides;
+using Chess.Core.Sides;
+namespace Chess.Variants.Standard.Sides;
 
 public static class StandardSides
 {

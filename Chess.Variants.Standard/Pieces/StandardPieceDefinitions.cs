@@ -1,11 +1,13 @@
-﻿using Chess.Core.Board;
+using Chess.Variants.Standard.Board.Regions;
+using Chess.Core.Pieces;
+using Chess.Core.Board;
 using Chess.Core.Board.Regions;
 using Chess.Core.Movement;
 using Chess.Core.Movement.Conditions;
 using Chess.Core.Movement.Orientation;
 using Chess.Core.Movement.Patterns;
 
-namespace Chess.Core.Pieces;
+namespace Chess.Variants.Standard.Pieces;
 
 public static class StandardPieceDefinitions
 {

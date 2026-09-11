@@ -1,7 +1,9 @@
-﻿using Chess.Core.Board;
+using Chess.Variants.Standard.Sides;
+using Chess.Core.Movement.Orientation;
+using Chess.Core.Board;
 using Chess.Core.Sides;
 
-namespace Chess.Core.Movement.Orientation;
+namespace Chess.Variants.Standard.Movement.Orientation;
 
 public static class StandardChessOrientations
 {

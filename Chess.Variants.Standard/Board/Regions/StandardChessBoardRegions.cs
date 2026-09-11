@@ -1,6 +1,9 @@
-﻿using Chess.Core.Sides;
+using Chess.Variants.Standard.Sides;
+using Chess.Core.Board.Regions;
+using Chess.Core.Board;
+using Chess.Core.Sides;
 
-namespace Chess.Core.Board.Regions;
+namespace Chess.Variants.Standard.Board.Regions;
 
 public static class StandardChessBoardRegions
 {

@@ -1,6 +1,7 @@
-﻿using Chess.Core.Sides;
+﻿using Chess.Core.Games;
+using Chess.Variants.Standard.Sides;
 
-namespace Chess.Core.Games;
+namespace Chess.Variants.Standard.Games;
 
 public static class StandardChessTurnOrder
 {

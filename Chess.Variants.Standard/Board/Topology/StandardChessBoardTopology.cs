@@ -1,4 +1,6 @@
-﻿namespace Chess.Core.Board.Topology;
+using Chess.Core.Board.Topology;
+using Chess.Core.Board;
+namespace Chess.Variants.Standard.Board.Topology;
 
 public static class StandardChessBoardTopology
 {
