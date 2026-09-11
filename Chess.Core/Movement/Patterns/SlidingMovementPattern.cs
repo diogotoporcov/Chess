@@ -3,14 +3,15 @@ using Chess.Core.Sides;
 
 namespace Chess.Core.Movement.Patterns;
 
-public sealed class SlidingMovementPattern : IMovementPattern
+public sealed class SlidingMovementPattern :
+    IMovementPattern
 {
-    private readonly Direction _direction;
+    private readonly DirectionReference _direction;
     private readonly int? _maxDistance;
     private readonly MovementTargetMode _targetMode;
 
     public SlidingMovementPattern(
-        Direction direction,
+        DirectionReference direction,
         int? maxDistance = null,
         MovementTargetMode targetMode = MovementTargetMode.MoveOrCapture)
     {
@@ -37,12 +38,18 @@ public sealed class SlidingMovementPattern : IMovementPattern
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
-        BoardState boardState,
+        MovementContext context,
         Square from,
         Side movingSide)
     {
-        ArgumentNullException.ThrowIfNull(boardState);
+        ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(movingSide);
+
+        var boardState = context.BoardState;
+
+        var direction = _direction.Resolve(
+            context,
+            movingSide);
 
         var current = from;
         var distance = 0;
@@ -52,7 +59,7 @@ public sealed class SlidingMovementPattern : IMovementPattern
              distance < _maxDistance.Value) &&
             boardState.Topology.TryGetNext(
                 current,
-                _direction,
+                direction,
                 out var next))
         {
             distance++;

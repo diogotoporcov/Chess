@@ -28,16 +28,19 @@ public sealed class LeapingMovementPattern : IMovementPattern
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
-        BoardState boardState,
+        MovementContext context,
         Square from,
         Side movingSide)
     {
-        ArgumentNullException.ThrowIfNull(boardState);
+        ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(movingSide);
 
+        var boardState = context.BoardState;
+
         var destinations = ResolveDestinations(
-            boardState.Topology,
-            from);
+            context,
+            from,
+            movingSide);
 
         foreach (var destination in destinations)
         {
@@ -70,11 +73,21 @@ public sealed class LeapingMovementPattern : IMovementPattern
     }
 
     private IReadOnlySet<Square> ResolveDestinations(
-        BoardTopology topology,
-        Square from)
+        MovementContext context,
+        Square from,
+        Side movingSide)
     {
-        var components =
-            _displacement.Components.ToArray();
+        var topology = context.BoardState.Topology;
+
+        var components = _displacement.Components.ToArray();
+
+        var directions = components
+            .Select(
+                component =>
+                    component.Direction.Resolve(
+                        context,
+                        movingSide))
+            .ToArray();
 
         var remainingSteps = components
             .Select(component => component.Distance)
@@ -85,7 +98,7 @@ public sealed class LeapingMovementPattern : IMovementPattern
         Resolve(
             topology,
             from,
-            components,
+            directions,
             remainingSteps,
             remainingSteps.Sum(),
             destinations);
@@ -96,7 +109,7 @@ public sealed class LeapingMovementPattern : IMovementPattern
     private static void Resolve(
         BoardTopology topology,
         Square current,
-        IReadOnlyList<DisplacementComponent> components,
+        IReadOnlyList<Direction> directions,
         int[] remainingSteps,
         int remainingDistance,
         HashSet<Square> destinations)
@@ -108,7 +121,7 @@ public sealed class LeapingMovementPattern : IMovementPattern
         }
 
         for (var index = 0;
-             index < components.Count;
+             index < directions.Count;
              index++)
         {
             if (remainingSteps[index] == 0)
@@ -116,12 +129,9 @@ public sealed class LeapingMovementPattern : IMovementPattern
                 continue;
             }
 
-            var direction =
-                components[index].Direction;
-
             if (!topology.TryGetNext(
                     current,
-                    direction,
+                    directions[index],
                     out var next))
             {
                 continue;
@@ -132,7 +142,7 @@ public sealed class LeapingMovementPattern : IMovementPattern
             Resolve(
                 topology,
                 next,
-                components,
+                directions,
                 remainingSteps,
                 remainingDistance - 1,
                 destinations);

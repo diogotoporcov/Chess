@@ -21,15 +21,19 @@ public sealed class Piece
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
-        BoardState boardState,
+        MovementContext context,
         Square from)
     {
-        ArgumentNullException.ThrowIfNull(boardState);
+        ArgumentNullException.ThrowIfNull(context);
+
+        var boardState = context.BoardState;
 
         if (!boardState.TryGetPiece(
                 from,
                 out var occupyingPiece) ||
-            !ReferenceEquals(occupyingPiece, this))
+            !ReferenceEquals(
+                occupyingPiece,
+                this))
         {
             throw new InvalidOperationException(
                 "This piece is not placed on the specified square.");
@@ -41,7 +45,7 @@ public sealed class Piece
         {
             foreach (var move in
                      pattern.GeneratePseudoLegalMoves(
-                         boardState,
+                         context,
                          from,
                          Side))
             {

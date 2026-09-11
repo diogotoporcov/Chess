@@ -3,13 +3,14 @@ using Chess.Core.Sides;
 
 namespace Chess.Core.Movement.Patterns;
 
-public sealed class PathMovementPattern : IMovementPattern
+public sealed class PathMovementPattern :
+    IMovementPattern
 {
-    private readonly Direction[] _path;
+    private readonly DirectionReference[] _path;
     private readonly MovementTargetMode _targetMode;
 
     public PathMovementPattern(
-        params Direction[] path)
+        params DirectionReference[] path)
         : this(
             MovementTargetMode.MoveOrCapture,
             path)
@@ -18,7 +19,7 @@ public sealed class PathMovementPattern : IMovementPattern
 
     public PathMovementPattern(
         MovementTargetMode targetMode,
-        params Direction[] path)
+        params DirectionReference[] path)
     {
         ArgumentNullException.ThrowIfNull(path);
 
@@ -46,20 +47,27 @@ public sealed class PathMovementPattern : IMovementPattern
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
-        BoardState boardState,
+        MovementContext context,
         Square from,
         Side movingSide)
     {
-        ArgumentNullException.ThrowIfNull(boardState);
+        ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(movingSide);
 
+        var boardState = context.BoardState;
         var current = from;
 
-        for (var index = 0; index < _path.Length; index++)
+        for (var index = 0;
+             index < _path.Length;
+             index++)
         {
+            var direction = _path[index].Resolve(
+                context,
+                movingSide);
+
             if (!boardState.Topology.TryGetNext(
                     current,
-                    _path[index],
+                    direction,
                     out var next))
             {
                 yield break;

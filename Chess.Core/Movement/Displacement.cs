@@ -19,14 +19,6 @@ public sealed class Displacement : IEquatable<Displacement>
                 nameof(components));
         }
 
-        if (components.Any(
-                component => component.Distance <= 0))
-        {
-            throw new ArgumentException(
-                "Displacement distance must be greater than zero.",
-                nameof(components));
-        }
-
         if (components
             .GroupBy(component => component.Direction)
             .Any(group => group.Count() > 1))
@@ -39,7 +31,7 @@ public sealed class Displacement : IEquatable<Displacement>
         var orderedComponents =
             components
                 .OrderBy(
-                    component => component.Direction.Name,
+                    component => component.Direction.SortKey,
                     StringComparer.Ordinal)
                 .ToArray();
 
