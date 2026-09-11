@@ -1,4 +1,5 @@
 ﻿using Chess.Core.Games;
+using Chess.Core.Games.Attacks;
 using Chess.Core.Games.Variants;
 using Chess.Core.Movement;
 using Chess.Core.Sides;
@@ -6,8 +7,10 @@ using Chess.Variants.Standard.Board;
 using Chess.Variants.Standard.Board.Regions;
 using Chess.Variants.Standard.Board.Topology;
 using Chess.Variants.Standard.Games;
+using Chess.Variants.Standard.Games.Rules;
 using Chess.Variants.Standard.Movement.Orientation;
 using Chess.Variants.Standard.Pieces;
+using Chess.Variants.Standard.Sides;
 
 namespace Chess.Variants.Standard;
 
@@ -28,6 +31,19 @@ public static class Variant
 
     private static GameVariantDefinition CreateDefinition()
     {
+        var executionResolver = new BasicMoveExecutionResolver();
+
+        var attackGenerator = new PatternAttackGenerator();
+
+        var checkDetector = new CheckDetector(attackGenerator);
+
+        var moveGenerator =
+            new LegalMoveGenerator(
+                new PseudoLegalGameMoveGenerator(),
+                new GameMoveSimulator(
+                    executionResolver),
+                checkDetector);
+
         return new GameVariantDefinition(
             new GameVariantId("chess:standard"),
             "Standard Chess",
@@ -35,35 +51,34 @@ public static class Variant
             TurnOrderDefinition.Instance,
             Orientations.Resolver,
             BoardRegions.Resolver,
-            new PseudoLegalGameMoveGenerator(),
-            new BasicMoveExecutionResolver(),
+            moveGenerator,
+            executionResolver,
             CreateInitialPlacements());
     }
 
     private static InitialPiecePlacement[]
         CreateInitialPlacements()
     {
-        var placements =
-            new List<InitialPiecePlacement>();
+        var placements = new List<InitialPiecePlacement>();
 
         AddPawns(
             placements,
-            Sides.SideDefinitions.Black,
+            SideDefinitions.Black,
             BlackPawnRow);
 
         AddPawns(
             placements,
-            Sides.SideDefinitions.White,
+            SideDefinitions.White,
             WhitePawnRow);
 
         AddBackRank(
             placements,
-            Sides.SideDefinitions.Black,
+            SideDefinitions.Black,
             BlackBackRankRow);
 
         AddBackRank(
             placements,
-            Sides.SideDefinitions.White,
+            SideDefinitions.White,
             WhiteBackRankRow);
 
         return
