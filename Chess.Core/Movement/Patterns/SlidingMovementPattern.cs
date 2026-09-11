@@ -5,8 +5,8 @@ namespace Chess.Core.Movement.Patterns;
 
 public sealed class SlidingMovementPattern : IMovementPattern
 {
-    public Direction Direction { get; }
-    public int? MaxDistance { get; }
+    private readonly Direction _direction;
+    private readonly int? _maxDistance;
 
     public SlidingMovementPattern(
         Direction direction,
@@ -19,8 +19,8 @@ public sealed class SlidingMovementPattern : IMovementPattern
                 "Maximum distance must be greater than zero.");
         }
 
-        Direction = direction;
-        MaxDistance = maxDistance;
+        _direction = direction;
+        _maxDistance = maxDistance;
     }
 
     public IEnumerable<Move> GeneratePseudoLegalMoves(
@@ -34,11 +34,11 @@ public sealed class SlidingMovementPattern : IMovementPattern
         var distance = 0;
 
         while (
-            (!MaxDistance.HasValue ||
-             distance < MaxDistance.Value) &&
+            (!_maxDistance.HasValue ||
+             distance < _maxDistance.Value) &&
             boardState.Topology.TryGetNext(
                 current,
-                Direction,
+                _direction,
                 out var next))
         {
             distance++;
