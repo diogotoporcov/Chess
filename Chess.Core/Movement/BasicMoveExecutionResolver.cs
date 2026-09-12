@@ -12,6 +12,12 @@ public sealed class BasicMoveExecutionResolver :
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
+        if (move.OptionId is not null)
+        {
+            throw new InvalidOperationException(
+                "Basic move execution cannot resolve a move with a specialized option.");
+        }
+
         var boardState = gameState.BoardState;
 
         if (!boardState.TryGetPiece(

@@ -8,9 +8,12 @@ public readonly record struct Move
 
     public Square To { get; }
 
+    public MoveOptionId? OptionId { get; }
+
     public Move(
         Square from,
-        Square to)
+        Square to,
+        MoveOptionId? optionId = null)
     {
         if (from == to)
         {
@@ -20,5 +23,6 @@ public readonly record struct Move
 
         From = from;
         To = to;
+        OptionId = optionId;
     }
 }
