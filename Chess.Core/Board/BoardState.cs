@@ -9,16 +9,46 @@ namespace Chess.Core.Board;
 public sealed class BoardState
 {
     private readonly Dictionary<Square, Piece> _pieces = [];
+
     private readonly Dictionary<Piece, Square> _pieceSquares = new(ReferenceEqualityComparer.Instance);
 
     public BoardTopology Topology { get; }
 
-    public BoardState(
-        BoardTopology topology)
+    internal BoardState(
+        BoardTopology topology,
+        IEnumerable<KeyValuePair<Square, Piece>>
+            placements)
     {
         ArgumentNullException.ThrowIfNull(topology);
+        ArgumentNullException.ThrowIfNull(placements);
 
         Topology = topology;
+
+        foreach (var placement in placements)
+        {
+            var square = placement.Key;
+            var piece = placement.Value;
+
+            ArgumentNullException.ThrowIfNull(piece);
+
+            EnsureSquareExists(square);
+
+            if (!_pieces.TryAdd(
+                    square,
+                    piece))
+            {
+                throw new InvalidOperationException(
+                    "Multiple pieces cannot occupy the same square.");
+            }
+
+            if (!_pieceSquares.TryAdd(
+                    piece,
+                    square))
+            {
+                throw new InvalidOperationException(
+                    "The same piece cannot be placed on multiple squares.");
+            }
+        }
     }
 
     public bool IsOccupied(
@@ -57,52 +87,6 @@ public sealed class BoardState
         ArgumentNullException.ThrowIfNull(side);
 
         return EnumeratePiecePositions(side);
-    }
-
-    public void PlacePiece(
-        Square square,
-        Piece piece)
-    {
-        EnsureSquareExists(square);
-        ArgumentNullException.ThrowIfNull(piece);
-
-        if (_pieces.ContainsKey(square))
-        {
-            throw new InvalidOperationException(
-                "Square is already occupied.");
-        }
-
-        if (_pieceSquares.ContainsKey(piece))
-        {
-            throw new InvalidOperationException(
-                "Piece is already placed on the board.");
-        }
-
-        _pieces.Add(
-            square,
-            piece);
-
-        _pieceSquares.Add(
-            piece,
-            square);
-    }
-
-    public Piece RemovePiece(
-        Square square)
-    {
-        EnsureSquareExists(square);
-
-        if (!_pieces.Remove(
-                square,
-                out var piece))
-        {
-            throw new InvalidOperationException(
-                "Square is not occupied.");
-        }
-
-        _pieceSquares.Remove(piece);
-
-        return piece;
     }
 
     internal void ApplyTransition(
@@ -150,9 +134,10 @@ public sealed class BoardState
         {
             EnsureSquareExists(change.Square);
 
-            var expectedPiece = reverse
-                ? change.After
-                : change.Before;
+            var expectedPiece =
+                reverse
+                    ? change.After
+                    : change.Before;
 
             if (!MatchesCurrentPiece(
                     change.Square,
@@ -163,21 +148,23 @@ public sealed class BoardState
             }
         }
 
-        var affectedSquares = transition
-            .Changes
-            .Select(change => change.Square)
-            .ToHashSet();
+        var affectedSquares =
+            transition
+                .Changes
+                .Select(change => change.Square)
+                .ToHashSet();
 
-        var resultingPieces = transition
-            .Changes
-            .Select(
-                change =>
-                    reverse
-                        ? change.Before
-                        : change.After)
-            .Where(piece => piece is not null)
-            .Cast<Piece>()
-            .ToArray();
+        var resultingPieces =
+            transition
+                .Changes
+                .Select(
+                    change =>
+                        reverse
+                            ? change.Before
+                            : change.After)
+                .Where(piece => piece is not null)
+                .Cast<Piece>()
+                .ToArray();
 
         if (resultingPieces
             .GroupBy(
@@ -215,9 +202,10 @@ public sealed class BoardState
 
         foreach (var change in transition.Changes)
         {
-            var resultingPiece = reverse
-                ? change.Before
-                : change.After;
+            var resultingPiece =
+                reverse
+                    ? change.Before
+                    : change.After;
 
             if (resultingPiece is null)
             {

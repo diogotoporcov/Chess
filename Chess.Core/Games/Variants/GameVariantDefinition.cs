@@ -104,7 +104,8 @@ public sealed class GameVariantDefinition
 
         _statusEvaluator = statusEvaluator;
 
-        _initialPlacements = Array.AsReadOnly(
+        _initialPlacements =
+            Array.AsReadOnly(
                 [
                     .. initialPlacements
                 ]);
@@ -112,16 +113,18 @@ public sealed class GameVariantDefinition
 
     public Game CreateGame()
     {
-        var boardState = new BoardState(Topology);
+        var boardBuilder = new BoardStateBuilder(Topology);
 
         foreach (var placement in _initialPlacements)
         {
-            boardState.PlacePiece(
+            boardBuilder.PlacePiece(
                 placement.Square,
                 new Piece(
                     placement.Side,
                     placement.Definition));
         }
+
+        var boardState = boardBuilder.Build();
 
         var movementContext =
             new MovementContext(
