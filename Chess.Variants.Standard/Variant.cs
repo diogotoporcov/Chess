@@ -8,6 +8,7 @@ using Chess.Variants.Standard.Board.Regions;
 using Chess.Variants.Standard.Board.Topology;
 using Chess.Variants.Standard.Games;
 using Chess.Variants.Standard.Games.Rules;
+using Chess.Variants.Standard.Movement;
 using Chess.Variants.Standard.Movement.Orientation;
 using Chess.Variants.Standard.Pieces;
 using Chess.Variants.Standard.Sides;
@@ -22,8 +23,7 @@ public static class Variant
     private const int WhitePawnRow = 6;
     private const int WhiteBackRankRow = 7;
 
-    public static GameVariantDefinition Definition { get; } =
-        CreateDefinition();
+    public static GameVariantDefinition Definition { get; } = CreateDefinition();
 
     public static Game CreateGame()
     {
@@ -32,15 +32,21 @@ public static class Variant
 
     private static GameVariantDefinition CreateDefinition()
     {
-        var executionResolver = new BasicMoveExecutionResolver();
+        var basicExecutionResolver = new BasicMoveExecutionResolver();
+        
+        var executionResolver = new MoveExecutionResolver(basicExecutionResolver);
 
         var attackGenerator = new PatternAttackGenerator();
 
         var checkDetector = new CheckDetector(attackGenerator);
 
+        var pseudoLegalMoveGenerator =
+            new PromotionMoveGenerator(
+                new PseudoLegalGameMoveGenerator());
+
         var legalMoveGenerator =
             new LegalMoveGenerator(
-                new PseudoLegalGameMoveGenerator(),
+                pseudoLegalMoveGenerator,
                 new GameMoveSimulator(
                     executionResolver),
                 checkDetector);
