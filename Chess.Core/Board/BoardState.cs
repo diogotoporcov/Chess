@@ -81,12 +81,20 @@ public sealed class BoardState
             out square);
     }
 
-    public IEnumerable<PiecePosition> GetPiecePositions(
-        Side side)
+    public IReadOnlyList<PiecePosition> GetPiecePositions(
+            Side side)
     {
         ArgumentNullException.ThrowIfNull(side);
 
-        return EnumeratePiecePositions(side);
+        return
+        [
+            .. _pieces
+                .Where(entry => entry.Value.Side == side)
+                .Select(entry =>
+                    new PiecePosition(
+                        entry.Key,
+                        entry.Value))
+        ];
     }
 
     internal void ApplyTransition(
@@ -107,23 +115,6 @@ public sealed class BoardState
         ApplyChanges(
             transition,
             reverse: true);
-    }
-
-    private IEnumerable<PiecePosition>
-        EnumeratePiecePositions(
-            Side side)
-    {
-        foreach (var entry in _pieces)
-        {
-            if (entry.Value.Side != side)
-            {
-                continue;
-            }
-
-            yield return new PiecePosition(
-                entry.Key,
-                entry.Value);
-        }
     }
 
     private void ApplyChanges(
