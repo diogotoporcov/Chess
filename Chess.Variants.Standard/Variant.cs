@@ -36,22 +36,32 @@ public static class Variant
             new CompositeMoveExecutionResolver(
                 new BasicMoveExecutionResolver(),
                 new PromotionMoveExecutionResolver(),
-                new EnPassantMoveExecutionResolver());
+                new EnPassantMoveExecutionResolver(),
+                new CastlingMoveExecutionResolver());
 
-        var attackGenerator = new PatternAttackGenerator();
+        var moveSimulator =
+            new GameMoveSimulator(
+                executionResolver);
 
-        var checkDetector = new CheckDetector(attackGenerator);
+        var attackGenerator =
+            new PatternAttackGenerator();
+
+        var checkDetector =
+            new CheckDetector(
+                attackGenerator);
 
         var pseudoLegalMoveGenerator =
-            new EnPassantMoveGenerator(
-                new PromotionMoveGenerator(
-                    new PseudoLegalGameMoveGenerator()));
+            new CastlingMoveGenerator(
+                new EnPassantMoveGenerator(
+                    new PromotionMoveGenerator(
+                        new PseudoLegalGameMoveGenerator())),
+                moveSimulator,
+                checkDetector);
 
         var legalMoveGenerator =
             new LegalMoveGenerator(
                 pseudoLegalMoveGenerator,
-                new GameMoveSimulator(
-                    executionResolver),
+                moveSimulator,
                 checkDetector);
 
         var statusEvaluator =
