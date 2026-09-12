@@ -1,0 +1,52 @@
+<UserControl x:Class="Chess.Desktop.Views.Components.ModeCardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Button Command="{Binding SelectCommand}"
+            Style="{StaticResource ModeCardButtonStyle}">
+
+        <Grid>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="{Binding Name}"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       FontSize="21"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap" />
+
+            <TextBlock Grid.Row="1"
+                       Text="{Binding Description}"
+                       Margin="0,9,0,18"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       FontSize="14"
+                       LineHeight="20"
+                       TextWrapping="Wrap" />
+
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal">
+
+                <TextBlock Text="{Binding PlayerSummary}"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           FontSize="13"
+                           FontWeight="SemiBold" />
+
+                <TextBlock Text="    "
+                           FontSize="13" />
+
+                <TextBlock Text="{Binding BoardSummary}"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           FontSize="13"
+                           FontWeight="SemiBold" />
+
+            </StackPanel>
+
+        </Grid>
+
+    </Button>
+
+</UserControl>
