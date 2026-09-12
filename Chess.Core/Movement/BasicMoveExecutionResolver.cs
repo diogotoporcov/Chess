@@ -6,16 +6,22 @@ namespace Chess.Core.Movement;
 public sealed class BasicMoveExecutionResolver :
     IMoveExecutionResolver
 {
+    public bool CanResolve(
+        Move move)
+    {
+        return move.OptionId is null;
+    }
+
     public MoveExecution Resolve(
         GameState gameState,
         Move move)
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        if (move.OptionId is not null)
+        if (!CanResolve(move))
         {
             throw new InvalidOperationException(
-                "Basic move execution cannot resolve a move with a specialized option.");
+                "Basic move execution cannot resolve a specialized move.");
         }
 
         var boardState = gameState.BoardState;

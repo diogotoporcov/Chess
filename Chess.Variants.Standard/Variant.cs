@@ -32,17 +32,20 @@ public static class Variant
 
     private static GameVariantDefinition CreateDefinition()
     {
-        var basicExecutionResolver = new BasicMoveExecutionResolver();
-        
-        var executionResolver = new MoveExecutionResolver(basicExecutionResolver);
+        var executionResolver =
+            new CompositeMoveExecutionResolver(
+                new BasicMoveExecutionResolver(),
+                new PromotionMoveExecutionResolver(),
+                new EnPassantMoveExecutionResolver());
 
         var attackGenerator = new PatternAttackGenerator();
 
         var checkDetector = new CheckDetector(attackGenerator);
 
         var pseudoLegalMoveGenerator =
-            new PromotionMoveGenerator(
-                new PseudoLegalGameMoveGenerator());
+            new EnPassantMoveGenerator(
+                new PromotionMoveGenerator(
+                    new PseudoLegalGameMoveGenerator()));
 
         var legalMoveGenerator =
             new LegalMoveGenerator(

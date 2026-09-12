@@ -7,17 +7,15 @@ using Chess.Variants.Standard.Pieces;
 
 namespace Chess.Variants.Standard.Movement;
 
-public sealed class MoveExecutionResolver :
+public sealed class PromotionMoveExecutionResolver :
     IMoveExecutionResolver
 {
-    private readonly IMoveExecutionResolver _basicResolver;
-
-    public MoveExecutionResolver(
-        IMoveExecutionResolver basicResolver)
+    public bool CanResolve(
+        Move move)
     {
-        ArgumentNullException.ThrowIfNull(basicResolver);
-
-        _basicResolver = basicResolver;
+        return move.OptionId is not null &&
+               PromotionOptions.Contains(
+                   move.OptionId);
     }
 
     public MoveExecution Resolve(
@@ -26,28 +24,12 @@ public sealed class MoveExecutionResolver :
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        if (move.OptionId is null)
-        {
-            return _basicResolver.Resolve(
-                gameState,
-                move);
-        }
-
-        if (!PromotionOptions.Contains(move.OptionId))
+        if (!CanResolve(move))
         {
             throw new InvalidOperationException(
-                $"Unsupported move option '{move.OptionId}'.");
+                "Move is not a promotion.");
         }
 
-        return ResolvePromotion(
-            gameState,
-            move);
-    }
-
-    private static MoveExecution ResolvePromotion(
-        GameState gameState,
-        Move move)
-    {
         var boardState = gameState.BoardState;
 
         if (!boardState.TryGetPiece(
@@ -84,9 +66,7 @@ public sealed class MoveExecutionResolver :
                 "A pawn cannot promote onto a square occupied by a piece from the same side.");
         }
 
-        var promotedDefinition =
-            PromotionOptions.ResolvePieceDefinition(
-                move.OptionId!);
+        var promotedDefinition = PromotionOptions.ResolvePieceDefinition(move.OptionId!);
 
         var promotedPiece =
             new Piece(
