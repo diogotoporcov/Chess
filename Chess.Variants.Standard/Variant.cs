@@ -10,6 +10,7 @@ using Chess.Variants.Standard.Board;
 using Chess.Variants.Standard.Board.Regions;
 using Chess.Variants.Standard.Board.Topology;
 using Chess.Variants.Standard.Games;
+using Chess.Variants.Standard.Games.History;
 using Chess.Variants.Standard.Games.Rules;
 using Chess.Variants.Standard.Movement;
 using Chess.Variants.Standard.Movement.Orientation;
@@ -26,15 +27,20 @@ public static class Variant
     private const int WhitePawnRow = 6;
     private const int WhiteBackRankRow = 7;
 
-    public static GameVariantDefinition Definition { get; } =
-        CreateDefinition();
+    private static readonly VariantComponents Components = CreateComponents();
+
+    public static GameVariantDefinition Definition =>
+        Components.VariantDefinition;
+
+    public static StandardPositionFactsEvaluator PositionFactsEvaluator =>
+        Components.FactsEvaluator;
 
     public static Game CreateGame()
     {
         return Definition.CreateGame();
     }
 
-    private static GameVariantDefinition CreateDefinition()
+    private static VariantComponents CreateComponents()
     {
         var executionResolver = new CompositeMoveExecutionResolver(
             new BasicMoveExecutionResolver(),
@@ -63,7 +69,7 @@ public static class Variant
             legalMoveGenerator,
             checkDetector);
 
-        return new GameVariantDefinition(
+        var definition = new GameVariantDefinition(
             new GameVariantId("chess:standard"),
             "Standard Chess",
             BoardTopologyFactory.Create(),
@@ -74,6 +80,10 @@ public static class Variant
             executionResolver,
             statusEvaluator,
             CreateInitialPlacements());
+
+        return new VariantComponents(
+            definition,
+            new StandardPositionFactsEvaluator(legalMoveGenerator));
     }
 
     private static InitialPiecePlacement[] CreateInitialPlacements()
@@ -128,4 +138,8 @@ public static class Variant
                     definitions[column]));
         }
     }
+
+    private sealed record VariantComponents(
+        GameVariantDefinition VariantDefinition,
+        StandardPositionFactsEvaluator FactsEvaluator);
 }

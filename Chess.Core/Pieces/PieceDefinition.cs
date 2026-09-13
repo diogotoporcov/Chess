@@ -28,8 +28,7 @@ public sealed class PieceDefinition
 
         ArgumentNullException.ThrowIfNull(movementPatterns);
 
-        var validatedPatterns =
-            new IMovementPattern[movementPatterns.Length];
+        var validatedPatterns = new IMovementPattern[movementPatterns.Length];
 
         for (var index = 0; index < movementPatterns.Length; index++)
         {

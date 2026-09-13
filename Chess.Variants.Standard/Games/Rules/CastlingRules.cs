@@ -7,6 +7,7 @@ using Chess.Core.Movement;
 using Chess.Core.Pieces;
 using Chess.Core.Sides;
 using Chess.Variants.Standard.Board;
+using Chess.Variants.Standard.Games.History;
 using Chess.Variants.Standard.Movement;
 using Chess.Variants.Standard.Pieces;
 using Chess.Variants.Standard.Sides;
@@ -95,8 +96,9 @@ internal static class CastlingRules
             return false;
         }
 
-        if (HasMoved(gameState, king) ||
-            HasMoved(gameState, rook))
+        var kingSide = move.OptionId == MoveOptions.CastleKingSide;
+
+        if (!CastlingRightsEvaluator.HasRight(gameState, king.Side, kingSide))
         {
             return false;
         }
@@ -163,25 +165,6 @@ internal static class CastlingRules
         throw new ArgumentException(
             $"Move option '{optionId}' is not a castling option.",
             nameof(optionId));
-    }
-
-    private static bool HasMoved(
-        GameState gameState,
-        Piece piece)
-    {
-        foreach (var record in gameState.History)
-        {
-            foreach (var change in record.Execution.Transition.Changes)
-            {
-                if (ReferenceEquals(change.Before, piece) ||
-                    ReferenceEquals(change.After, piece))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     private static IEnumerable<MoveOptionId> GetOptions()
