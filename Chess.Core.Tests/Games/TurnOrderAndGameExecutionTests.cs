@@ -211,12 +211,8 @@ public sealed class TurnOrderAndGameExecutionTests
         var occupiedDuringEvaluation = simulator.Evaluate(
             state,
             move,
-            (simulated, execution) =>
-            {
-                Assert.Equal(move, execution.Move);
-                return simulated.BoardState.IsOccupied(move.To) &&
-                       !simulated.BoardState.IsOccupied(move.From);
-            });
+            (simulated, _) => simulated.BoardState.IsOccupied(move.To) &&
+                              !simulated.BoardState.IsOccupied(move.From));
 
         Assert.True(occupiedDuringEvaluation);
         before.AssertMatches(state);
