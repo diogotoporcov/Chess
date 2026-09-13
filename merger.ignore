@@ -32,8 +32,6 @@ UserSettings/
 .idea/
 .vscode/
 .vs/
-*.sln
-*.csproj
 
 .DS_Store
 .AppleDouble
