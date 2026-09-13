@@ -15,7 +15,7 @@ public sealed class PieceDefinition
     public PieceDefinition(
         PieceDefinitionId id,
         string name,
-        params IMovementPattern[] movementPatterns)
+        params IMovementPattern?[] movementPatterns)
     {
         ArgumentNullException.ThrowIfNull(id);
 
@@ -28,9 +28,26 @@ public sealed class PieceDefinition
 
         ArgumentNullException.ThrowIfNull(movementPatterns);
 
+        var validatedPatterns =
+            new IMovementPattern[movementPatterns.Length];
+
+        for (var index = 0; index < movementPatterns.Length; index++)
+        {
+            var pattern = movementPatterns[index];
+
+            if (pattern is null)
+            {
+                throw new ArgumentException(
+                    "Movement patterns cannot contain null entries.",
+                    nameof(movementPatterns));
+            }
+
+            validatedPatterns[index] = pattern;
+        }
+
         Id = id;
         Name = name.Trim();
 
-        MovementPatterns = Array.AsReadOnly([.. movementPatterns]);
+        MovementPatterns = Array.AsReadOnly(validatedPatterns);
     }
 }

@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="Chess.Core/Chess.Core.csproj" />
+  <Project Path="Chess.Core.Tests/Chess.Core.Tests.csproj" />
   <Project Path="Chess.Desktop/Chess.Desktop.csproj" />
   <Project Path="Chess.Variants.Standard/Chess.Variants.Standard.csproj" />
+  <Project Path="Chess.Variants.Standard.Tests/Chess.Variants.Standard.Tests.csproj" />
 </Solution>
