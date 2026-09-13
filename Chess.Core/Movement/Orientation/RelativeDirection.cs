@@ -4,7 +4,8 @@ public sealed record RelativeDirection
 {
     public string Name { get; }
 
-    public RelativeDirection(string name)
+    public RelativeDirection(
+        string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {

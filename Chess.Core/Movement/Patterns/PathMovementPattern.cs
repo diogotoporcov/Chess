@@ -3,17 +3,15 @@ using Chess.Core.Sides;
 
 namespace Chess.Core.Movement.Patterns;
 
-public sealed class PathMovementPattern :
-    IMovementPattern
+public sealed class PathMovementPattern : IMovementPattern
 {
     private readonly DirectionReference[] _path;
     private readonly MovementTargetMode _targetMode;
 
     public PathMovementPattern(
-        params DirectionReference[] path)
-        : this(
-            MovementTargetMode.MoveOrCapture,
-            path)
+        params DirectionReference[] path) : this(
+        MovementTargetMode.MoveOrCapture,
+        path)
     {
     }
 
@@ -38,10 +36,7 @@ public sealed class PathMovementPattern :
                 "Unsupported movement target mode.");
         }
 
-        _path =
-        [
-            .. path
-        ];
+        _path = [.. path];
 
         _targetMode = targetMode;
     }
@@ -57,13 +52,10 @@ public sealed class PathMovementPattern :
         var boardState = context.BoardState;
         var current = from;
 
-        for (var index = 0;
-             index < _path.Length;
-             index++)
+        for (var index = 0; index < _path.Length; index++)
         {
-            var direction = _path[index].Resolve(
-                context,
-                movingSide);
+            var direction = _path[index]
+                .Resolve(context, movingSide);
 
             if (!boardState.Topology.TryGetNext(
                     current,
@@ -73,8 +65,7 @@ public sealed class PathMovementPattern :
                 yield break;
             }
 
-            var isDestination =
-                index == _path.Length - 1;
+            var isDestination = index == _path.Length - 1;
 
             if (!isDestination)
             {
@@ -87,30 +78,22 @@ public sealed class PathMovementPattern :
                 continue;
             }
 
-            if (!boardState.TryGetPiece(
-                    next,
-                    out var occupyingPiece))
+            if (!boardState.TryGetPiece(next, out var occupyingPiece))
             {
-                if (_targetMode is
-                    MovementTargetMode.MoveOrCapture or
-                    MovementTargetMode.MoveOnly)
+                if (_targetMode is MovementTargetMode.MoveOrCapture
+                    or MovementTargetMode.MoveOnly)
                 {
-                    yield return new Move(
-                        from,
-                        next);
+                    yield return new Move(from, next);
                 }
 
                 yield break;
             }
 
             if (occupyingPiece.Side != movingSide &&
-                _targetMode is
-                    MovementTargetMode.MoveOrCapture or
-                    MovementTargetMode.CaptureOnly)
+                _targetMode is MovementTargetMode.MoveOrCapture
+                    or MovementTargetMode.CaptureOnly)
             {
-                yield return new Move(
-                    from,
-                    next);
+                yield return new Move(from, next);
             }
 
             yield break;
@@ -135,9 +118,8 @@ public sealed class PathMovementPattern :
 
         for (var index = 0; index < _path.Length; index++)
         {
-            var direction = _path[index].Resolve(
-                context,
-                attackingSide);
+            var direction = _path[index]
+                .Resolve(context, attackingSide);
 
             if (!boardState.Topology.TryGetNext(
                     current,

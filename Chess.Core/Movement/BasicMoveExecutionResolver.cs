@@ -3,8 +3,7 @@ using Chess.Core.Games;
 
 namespace Chess.Core.Movement;
 
-public sealed class BasicMoveExecutionResolver :
-    IMoveExecutionResolver
+public sealed class BasicMoveExecutionResolver : IMoveExecutionResolver
 {
     public bool CanResolve(
         Move move)
@@ -26,17 +25,13 @@ public sealed class BasicMoveExecutionResolver :
 
         var boardState = gameState.BoardState;
 
-        if (!boardState.TryGetPiece(
-                move.From,
-                out var movingPiece))
+        if (!boardState.TryGetPiece(move.From, out var movingPiece))
         {
             throw new InvalidOperationException(
                 "Move origin does not contain a piece.");
         }
 
-        boardState.TryGetPiece(
-            move.To,
-            out var destinationPiece);
+        boardState.TryGetPiece(move.To, out var destinationPiece);
 
         if (destinationPiece is not null &&
             destinationPiece.Side == movingPiece.Side)
@@ -45,19 +40,10 @@ public sealed class BasicMoveExecutionResolver :
                 "A piece cannot capture another piece from the same side.");
         }
 
-        var transition =
-            new BoardTransition(
-                new BoardSquareChange(
-                    move.From,
-                    movingPiece,
-                    null),
-                new BoardSquareChange(
-                    move.To,
-                    destinationPiece,
-                    movingPiece));
+        var transition = new BoardTransition(
+            new BoardSquareChange(move.From, movingPiece, null),
+            new BoardSquareChange(move.To, destinationPiece, movingPiece));
 
-        return new MoveExecution(
-            move,
-            transition);
+        return new MoveExecution(move, transition);
     }
 }

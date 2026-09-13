@@ -46,9 +46,8 @@ public sealed class GameModeCatalog
     {
         ArgumentNullException.ThrowIfNull(variantId);
 
-        return _modes.FirstOrDefault(
-                   mode => mode.Variant.Id == variantId)
-               ?? throw new KeyNotFoundException(
+        return _modes.FirstOrDefault(mode => mode.Variant.Id == variantId) ??
+               throw new KeyNotFoundException(
                    $"No game mode is registered with id '{variantId}'.");
     }
 }

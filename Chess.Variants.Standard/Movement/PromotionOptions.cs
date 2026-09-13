@@ -12,13 +12,7 @@ public static class PromotionOptions
     public static readonly MoveOptionId Knight = new("chess:promotion:knight");
 
     public static IReadOnlyList<MoveOptionId> All { get; } =
-        Array.AsReadOnly(
-        [
-            Queen,
-            Rook,
-            Bishop,
-            Knight
-        ]);
+        Array.AsReadOnly([Queen, Rook, Bishop, Knight]);
 
     internal static PieceDefinition ResolvePieceDefinition(
         MoveOptionId optionId)

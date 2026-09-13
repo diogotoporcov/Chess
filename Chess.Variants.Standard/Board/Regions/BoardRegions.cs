@@ -17,36 +17,16 @@ public static class BoardRegions
 
     public static IBoardRegionResolver Resolver { get; } =
         new SideBoardRegionMap(
-            (
-                SideDefinitions.White,
-                PawnStarting,
-                CreateRow(
-                    WhitePawnStartingRow)
-            ),
-            (
-                SideDefinitions.Black,
-                PawnStarting,
-                CreateRow(
-                    BlackPawnStartingRow)
-            ),
-            (
-                SideDefinitions.White,
-                Promotion,
-                CreateRow(
-                    WhitePromotionRow)
-            ),
-            (
-                SideDefinitions.Black,
-                Promotion,
-                CreateRow(
-                    BlackPromotionRow)
-            ));
+            (SideDefinitions.White, PawnStarting,
+                CreateRow(WhitePawnStartingRow)),
+            (SideDefinitions.Black, PawnStarting,
+                CreateRow(BlackPawnStartingRow)),
+            (SideDefinitions.White, Promotion, CreateRow(WhitePromotionRow)),
+            (SideDefinitions.Black, Promotion, CreateRow(BlackPromotionRow)));
 
     private static BoardRegion CreateRow(
         int row)
     {
-        return new BoardRegion(
-            BoardGeometry.GetRow(
-                row));
+        return new BoardRegion(BoardGeometry.GetRow(row));
     }
 }

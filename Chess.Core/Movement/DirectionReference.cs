@@ -17,8 +17,7 @@ public abstract record DirectionReference
     {
         ArgumentNullException.ThrowIfNull(direction);
 
-        return new AbsoluteDirectionReference(
-            direction);
+        return new AbsoluteDirectionReference(direction);
     }
 
     public static implicit operator DirectionReference(
@@ -26,16 +25,13 @@ public abstract record DirectionReference
     {
         ArgumentNullException.ThrowIfNull(direction);
 
-        return new RelativeDirectionReference(
-            direction);
+        return new RelativeDirectionReference(direction);
     }
 
-    private sealed record AbsoluteDirectionReference(
-        Direction Direction)
+    private sealed record AbsoluteDirectionReference(Direction Direction)
         : DirectionReference
     {
-        internal override string SortKey =>
-            $"absolute:{Direction.Name}";
+        internal override string SortKey => $"absolute:{Direction.Name}";
 
         internal override Direction Resolve(
             MovementContext context,
@@ -51,19 +47,15 @@ public abstract record DirectionReference
     }
 
     private sealed record RelativeDirectionReference(
-        RelativeDirection Direction)
-        : DirectionReference
+        RelativeDirection Direction) : DirectionReference
     {
-        internal override string SortKey =>
-            $"relative:{Direction.Name}";
+        internal override string SortKey => $"relative:{Direction.Name}";
 
         internal override Direction Resolve(
             MovementContext context,
             Side side)
         {
-            return context.ResolveRelativeDirection(
-                side,
-                Direction);
+            return context.ResolveRelativeDirection(side, Direction);
         }
 
         public override string ToString()

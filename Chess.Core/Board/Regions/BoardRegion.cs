@@ -21,7 +21,8 @@ public sealed class BoardRegion
         }
     }
 
-    public bool Contains(Square square)
+    public bool Contains(
+        Square square)
     {
         return _squares.Contains(square);
     }

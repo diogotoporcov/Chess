@@ -5,8 +5,7 @@ using Chess.Variants.Standard.Games.Rules;
 
 namespace Chess.Variants.Standard.Movement;
 
-public sealed class EnPassantMoveExecutionResolver :
-    IMoveExecutionResolver
+public sealed class EnPassantMoveExecutionResolver : IMoveExecutionResolver
 {
     public bool CanResolve(
         Move move)
@@ -36,31 +35,17 @@ public sealed class EnPassantMoveExecutionResolver :
                 "En passant move is not valid in the current game state.");
         }
 
-        if (!gameState.BoardState.TryGetPiece(
-                move.From,
-                out var movingPawn))
+        if (!gameState.BoardState.TryGetPiece(move.From, out var movingPawn))
         {
             throw new InvalidOperationException(
                 "En passant move origin does not contain a pawn.");
         }
 
-        var transition =
-            new BoardTransition(
-                new BoardSquareChange(
-                    move.From,
-                    movingPawn,
-                    null),
-                new BoardSquareChange(
-                    capturedPawnSquare,
-                    capturedPawn,
-                    null),
-                new BoardSquareChange(
-                    move.To,
-                    null,
-                    movingPawn));
+        var transition = new BoardTransition(
+            new BoardSquareChange(move.From, movingPawn, null),
+            new BoardSquareChange(capturedPawnSquare, capturedPawn, null),
+            new BoardSquareChange(move.To, null, movingPawn));
 
-        return new MoveExecution(
-            move,
-            transition);
+        return new MoveExecution(move, transition);
     }
 }

@@ -24,9 +24,6 @@ public sealed class OriginInRegionCondition : IMovementCondition
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(movingSide);
 
-        return context.IsInRegion(
-            movingSide,
-            _regionId,
-            from);
+        return context.IsInRegion(movingSide, _regionId, from);
     }
 }

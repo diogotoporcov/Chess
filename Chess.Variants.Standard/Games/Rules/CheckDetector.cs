@@ -6,8 +6,7 @@ namespace Chess.Variants.Standard.Games.Rules;
 
 public sealed class CheckDetector
 {
-    private readonly IAttackGenerator
-        _attackGenerator;
+    private readonly IAttackGenerator _attackGenerator;
 
     public CheckDetector(
         IAttackGenerator attackGenerator)
@@ -31,10 +30,7 @@ public sealed class CheckDetector
                 nameof(side));
         }
 
-        var kingSquare =
-            KingRules.FindKingSquare(
-                gameState,
-                side);
+        var kingSquare = KingRules.FindKingSquare(gameState, side);
 
         foreach (var attackingSide in gameState.TurnOrder.Sides)
         {

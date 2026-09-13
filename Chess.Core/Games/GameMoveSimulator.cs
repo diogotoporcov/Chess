@@ -6,7 +6,8 @@ public sealed class GameMoveSimulator
 {
     private readonly IMoveExecutionResolver _executionResolver;
 
-    public GameMoveSimulator(IMoveExecutionResolver executionResolver)
+    public GameMoveSimulator(
+        IMoveExecutionResolver executionResolver)
     {
         ArgumentNullException.ThrowIfNull(executionResolver);
 
@@ -21,9 +22,7 @@ public sealed class GameMoveSimulator
         ArgumentNullException.ThrowIfNull(gameState);
         ArgumentNullException.ThrowIfNull(evaluator);
 
-        var execution = _executionResolver.Resolve(
-            gameState,
-            move);
+        var execution = _executionResolver.Resolve(gameState, move);
 
         if (execution.Move != move)
         {
@@ -35,9 +34,7 @@ public sealed class GameMoveSimulator
 
         try
         {
-            return evaluator(
-                gameState,
-                execution);
+            return evaluator(gameState, execution);
         }
         finally
         {

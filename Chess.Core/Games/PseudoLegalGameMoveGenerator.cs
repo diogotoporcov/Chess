@@ -3,8 +3,7 @@ using Chess.Core.Movement;
 
 namespace Chess.Core.Games;
 
-public sealed class PseudoLegalGameMoveGenerator :
-    IGameMoveGenerator
+public sealed class PseudoLegalGameMoveGenerator : IGameMoveGenerator
 {
     public IEnumerable<Move> GenerateMoves(
         GameState gameState,
@@ -12,9 +11,7 @@ public sealed class PseudoLegalGameMoveGenerator :
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        if (!gameState.BoardState.TryGetPiece(
-                from,
-                out var piece))
+        if (!gameState.BoardState.TryGetPiece(from, out var piece))
         {
             yield break;
         }
@@ -24,8 +21,7 @@ public sealed class PseudoLegalGameMoveGenerator :
             yield break;
         }
 
-        foreach (var move in
-                 piece.GeneratePseudoLegalMoves(
+        foreach (var move in piece.GeneratePseudoLegalMoves(
                      gameState.MovementContext,
                      from))
         {

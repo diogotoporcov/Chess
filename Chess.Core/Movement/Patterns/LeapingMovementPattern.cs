@@ -4,8 +4,7 @@ using Chess.Core.Sides;
 
 namespace Chess.Core.Movement.Patterns;
 
-public sealed class LeapingMovementPattern :
-    IMovementPattern
+public sealed class LeapingMovementPattern : IMovementPattern
 {
     private readonly Displacement _displacement;
     private readonly MovementTargetMode _targetMode;
@@ -38,37 +37,26 @@ public sealed class LeapingMovementPattern :
 
         var boardState = context.BoardState;
 
-        var destinations = ResolveDestinations(
-            context,
-            from,
-            movingSide);
+        var destinations = ResolveDestinations(context, from, movingSide);
 
         foreach (var destination in destinations)
         {
-            if (!boardState.TryGetPiece(
-                    destination,
-                    out var occupyingPiece))
+            if (!boardState.TryGetPiece(destination, out var occupyingPiece))
             {
-                if (_targetMode is
-                    MovementTargetMode.MoveOrCapture or
-                    MovementTargetMode.MoveOnly)
+                if (_targetMode is MovementTargetMode.MoveOrCapture
+                    or MovementTargetMode.MoveOnly)
                 {
-                    yield return new Move(
-                        from,
-                        destination);
+                    yield return new Move(from, destination);
                 }
 
                 continue;
             }
 
             if (occupyingPiece.Side != movingSide &&
-                _targetMode is
-                    MovementTargetMode.MoveOrCapture or
-                    MovementTargetMode.CaptureOnly)
+                _targetMode is MovementTargetMode.MoveOrCapture
+                    or MovementTargetMode.CaptureOnly)
             {
-                yield return new Move(
-                    from,
-                    destination);
+                yield return new Move(from, destination);
             }
         }
     }
@@ -105,11 +93,8 @@ public sealed class LeapingMovementPattern :
         var components = _displacement.Components.ToArray();
 
         var directions = components
-            .Select(
-                component =>
-                    component.Direction.Resolve(
-                        context,
-                        movingSide))
+            .Select(component =>
+                component.Direction.Resolve(context, movingSide))
             .ToArray();
 
         var remainingSteps = components
@@ -150,10 +135,7 @@ public sealed class LeapingMovementPattern :
                 continue;
             }
 
-            if (!topology.TryGetNext(
-                    current,
-                    directions[index],
-                    out var next))
+            if (!topology.TryGetNext(current, directions[index], out var next))
             {
                 continue;
             }

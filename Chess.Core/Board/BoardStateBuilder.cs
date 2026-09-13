@@ -7,7 +7,8 @@ public sealed class BoardStateBuilder
 {
     private readonly Dictionary<Square, Piece> _pieces = [];
 
-    private readonly HashSet<Piece> _placedPieces = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<Piece> _placedPieces =
+        new(ReferenceEqualityComparer.Instance);
 
     public BoardTopology Topology { get; }
 
@@ -34,8 +35,7 @@ public sealed class BoardStateBuilder
 
         if (_pieces.ContainsKey(square))
         {
-            throw new InvalidOperationException(
-                "Square is already occupied.");
+            throw new InvalidOperationException("Square is already occupied.");
         }
 
         if (!_placedPieces.Add(piece))
@@ -44,17 +44,13 @@ public sealed class BoardStateBuilder
                 "Piece is already placed on the board.");
         }
 
-        _pieces.Add(
-            square,
-            piece);
+        _pieces.Add(square, piece);
 
         return this;
     }
 
     public BoardState Build()
     {
-        return new BoardState(
-            Topology,
-            _pieces);
+        return new BoardState(Topology, _pieces);
     }
 }

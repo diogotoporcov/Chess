@@ -25,9 +25,7 @@ public sealed class GameMoveExecutor
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        if (!gameState.BoardState.TryGetPiece(
-                move.From,
-                out var movingPiece))
+        if (!gameState.BoardState.TryGetPiece(move.From, out var movingPiece))
         {
             throw new InvalidOperationException(
                 "Move origin does not contain a piece.");
@@ -39,12 +37,9 @@ public sealed class GameMoveExecutor
                 "The piece does not belong to the side whose turn it is.");
         }
 
-        var isAllowed =
-            _moveGenerator
-                .GenerateMoves(
-                    gameState,
-                    move.From)
-                .Contains(move);
+        var isAllowed = _moveGenerator
+            .GenerateMoves(gameState, move.From)
+            .Contains(move);
 
         if (!isAllowed)
         {
@@ -52,10 +47,7 @@ public sealed class GameMoveExecutor
                 "Move is not allowed in the current game state.");
         }
 
-        var execution =
-            _executionResolver.Resolve(
-                gameState,
-                move);
+        var execution = _executionResolver.Resolve(gameState, move);
 
         if (execution.Move != move)
         {
@@ -67,13 +59,11 @@ public sealed class GameMoveExecutor
 
         try
         {
-            return gameState.CommitMove(
-                execution);
+            return gameState.CommitMove(execution);
         }
         catch
         {
-            gameState.BoardState.RevertTransition(
-                execution.Transition);
+            gameState.BoardState.RevertTransition(execution.Transition);
 
             throw;
         }
@@ -88,8 +78,7 @@ public sealed class GameMoveExecutor
 
         if (record is null)
         {
-            throw new InvalidOperationException(
-                "There is no move to undo.");
+            throw new InvalidOperationException("There is no move to undo.");
         }
 
         gameState.BoardState.RevertTransition(record.Execution.Transition);

@@ -10,14 +10,14 @@ public sealed class BoardState
 {
     private readonly Dictionary<Square, Piece> _pieces = [];
 
-    private readonly Dictionary<Piece, Square> _pieceSquares = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Piece, Square> _pieceSquares =
+        new(ReferenceEqualityComparer.Instance);
 
     public BoardTopology Topology { get; }
 
     internal BoardState(
         BoardTopology topology,
-        IEnumerable<KeyValuePair<Square, Piece>>
-            placements)
+        IEnumerable<KeyValuePair<Square, Piece>> placements)
     {
         ArgumentNullException.ThrowIfNull(topology);
         ArgumentNullException.ThrowIfNull(placements);
@@ -33,17 +33,13 @@ public sealed class BoardState
 
             EnsureSquareExists(square);
 
-            if (!_pieces.TryAdd(
-                    square,
-                    piece))
+            if (!_pieces.TryAdd(square, piece))
             {
                 throw new InvalidOperationException(
                     "Multiple pieces cannot occupy the same square.");
             }
 
-            if (!_pieceSquares.TryAdd(
-                    piece,
-                    square))
+            if (!_pieceSquares.TryAdd(piece, square))
             {
                 throw new InvalidOperationException(
                     "The same piece cannot be placed on multiple squares.");
@@ -65,9 +61,7 @@ public sealed class BoardState
     {
         EnsureSquareExists(square);
 
-        return _pieces.TryGetValue(
-            square,
-            out piece);
+        return _pieces.TryGetValue(square, out piece);
     }
 
     public bool TryGetSquare(
@@ -76,13 +70,11 @@ public sealed class BoardState
     {
         ArgumentNullException.ThrowIfNull(piece);
 
-        return _pieceSquares.TryGetValue(
-            piece,
-            out square);
+        return _pieceSquares.TryGetValue(piece, out square);
     }
 
     public IReadOnlyList<PiecePosition> GetPiecePositions(
-            Side side)
+        Side side)
     {
         ArgumentNullException.ThrowIfNull(side);
 
@@ -90,10 +82,7 @@ public sealed class BoardState
         [
             .. _pieces
                 .Where(entry => entry.Value.Side == side)
-                .Select(entry =>
-                    new PiecePosition(
-                        entry.Key,
-                        entry.Value))
+                .Select(entry => new PiecePosition(entry.Key, entry.Value))
         ];
     }
 
@@ -102,9 +91,7 @@ public sealed class BoardState
     {
         ArgumentNullException.ThrowIfNull(transition);
 
-        ApplyChanges(
-            transition,
-            reverse: false);
+        ApplyChanges(transition, reverse: false);
     }
 
     internal void RevertTransition(
@@ -112,9 +99,7 @@ public sealed class BoardState
     {
         ArgumentNullException.ThrowIfNull(transition);
 
-        ApplyChanges(
-            transition,
-            reverse: true);
+        ApplyChanges(transition, reverse: true);
     }
 
     private void ApplyChanges(
@@ -125,42 +110,29 @@ public sealed class BoardState
         {
             EnsureSquareExists(change.Square);
 
-            var expectedPiece =
-                reverse
-                    ? change.After
-                    : change.Before;
+            var expectedPiece = reverse ? change.After : change.Before;
 
-            if (!MatchesCurrentPiece(
-                    change.Square,
-                    expectedPiece))
+            if (!MatchesCurrentPiece(change.Square, expectedPiece))
             {
                 throw new InvalidOperationException(
                     "Board state does not match the expected transition state.");
             }
         }
 
-        var affectedSquares =
-            transition
-                .Changes
-                .Select(change => change.Square)
-                .ToHashSet();
+        var affectedSquares = transition
+            .Changes
+            .Select(change => change.Square)
+            .ToHashSet();
 
-        var resultingPieces =
-            transition
-                .Changes
-                .Select(
-                    change =>
-                        reverse
-                            ? change.Before
-                            : change.After)
-                .Where(piece => piece is not null)
-                .Cast<Piece>()
-                .ToArray();
+        var resultingPieces = transition
+            .Changes
+            .Select(change => reverse ? change.Before : change.After)
+            .Where(piece => piece is not null)
+            .Cast<Piece>()
+            .ToArray();
 
         if (resultingPieces
-            .GroupBy(
-                piece => piece,
-                ReferenceEqualityComparer.Instance)
+            .GroupBy(piece => piece, ReferenceEqualityComparer.Instance)
             .Any(group => group.Count() > 1))
         {
             throw new InvalidOperationException(
@@ -169,11 +141,8 @@ public sealed class BoardState
 
         foreach (var piece in resultingPieces)
         {
-            if (_pieceSquares.TryGetValue(
-                    piece,
-                    out var currentSquare) &&
-                !affectedSquares.Contains(
-                    currentSquare))
+            if (_pieceSquares.TryGetValue(piece, out var currentSquare) &&
+                !affectedSquares.Contains(currentSquare))
             {
                 throw new InvalidOperationException(
                     "A board transition cannot place a piece that is already present on an unaffected square.");
@@ -182,34 +151,24 @@ public sealed class BoardState
 
         foreach (var change in transition.Changes)
         {
-            if (_pieces.Remove(
-                    change.Square,
-                    out var currentPiece))
+            if (_pieces.Remove(change.Square, out var currentPiece))
             {
-                _pieceSquares.Remove(
-                    currentPiece);
+                _pieceSquares.Remove(currentPiece);
             }
         }
 
         foreach (var change in transition.Changes)
         {
-            var resultingPiece =
-                reverse
-                    ? change.Before
-                    : change.After;
+            var resultingPiece = reverse ? change.Before : change.After;
 
             if (resultingPiece is null)
             {
                 continue;
             }
 
-            _pieces.Add(
-                change.Square,
-                resultingPiece);
+            _pieces.Add(change.Square, resultingPiece);
 
-            _pieceSquares.Add(
-                resultingPiece,
-                change.Square);
+            _pieceSquares.Add(resultingPiece, change.Square);
         }
     }
 
@@ -217,16 +176,12 @@ public sealed class BoardState
         Square square,
         Piece? expectedPiece)
     {
-        if (!_pieces.TryGetValue(
-                square,
-                out var currentPiece))
+        if (!_pieces.TryGetValue(square, out var currentPiece))
         {
             return expectedPiece is null;
         }
 
-        return ReferenceEquals(
-            currentPiece,
-            expectedPiece);
+        return ReferenceEquals(currentPiece, expectedPiece);
     }
 
     private void EnsureSquareExists(

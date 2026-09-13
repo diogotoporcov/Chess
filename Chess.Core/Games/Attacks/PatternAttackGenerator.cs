@@ -3,25 +3,20 @@ using Chess.Core.Sides;
 
 namespace Chess.Core.Games.Attacks;
 
-public sealed class PatternAttackGenerator :
-    IAttackGenerator
+public sealed class PatternAttackGenerator : IAttackGenerator
 {
     public IEnumerable<Square> GenerateAttackedSquares(
         GameState gameState,
         Side attackingSide)
     {
-        Validate(
-            gameState,
-            attackingSide);
+        Validate(gameState, attackingSide);
 
         var attackedSquares = new HashSet<Square>();
 
-        foreach (var position in
-                 gameState.BoardState.GetPiecePositions(
+        foreach (var position in gameState.BoardState.GetPiecePositions(
                      attackingSide))
         {
-            foreach (var square in
-                     position.Piece.GenerateAttackedSquares(
+            foreach (var square in position.Piece.GenerateAttackedSquares(
                          gameState.MovementContext,
                          position.Square))
             {
@@ -38,9 +33,7 @@ public sealed class PatternAttackGenerator :
         Square square,
         Side attackingSide)
     {
-        Validate(
-            gameState,
-            attackingSide);
+        Validate(gameState, attackingSide);
 
         if (!gameState.BoardState.Topology.Contains(square))
         {
@@ -49,11 +42,11 @@ public sealed class PatternAttackGenerator :
                 nameof(square));
         }
 
-        foreach (var position in
-                 gameState.BoardState.GetPiecePositions(
+        foreach (var position in gameState.BoardState.GetPiecePositions(
                      attackingSide))
         {
-            if (position.Piece
+            if (position
+                .Piece
                 .GenerateAttackedSquares(
                     gameState.MovementContext,
                     position.Square)
@@ -73,8 +66,7 @@ public sealed class PatternAttackGenerator :
         ArgumentNullException.ThrowIfNull(gameState);
         ArgumentNullException.ThrowIfNull(attackingSide);
 
-        if (!gameState.TurnOrder.Contains(
-                attackingSide))
+        if (!gameState.TurnOrder.Contains(attackingSide))
         {
             throw new ArgumentException(
                 "Attacking side is not part of the game.",

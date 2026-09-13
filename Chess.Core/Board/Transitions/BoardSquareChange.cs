@@ -22,9 +22,7 @@ public sealed record BoardSquareChange
                 "A board square change must contain a piece before or after the change.");
         }
 
-        if (ReferenceEquals(
-                before,
-                after))
+        if (ReferenceEquals(before, after))
         {
             throw new ArgumentException(
                 "The piece before and after the change cannot be the same instance.");

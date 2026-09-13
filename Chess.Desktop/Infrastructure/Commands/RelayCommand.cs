@@ -17,12 +17,14 @@ public sealed class RelayCommand : ICommand
         _canExecute = canExecute;
     }
 
-    public bool CanExecute(object? parameter)
+    public bool CanExecute(
+        object? parameter)
     {
         return _canExecute?.Invoke() ?? true;
     }
 
-    public void Execute(object? parameter)
+    public void Execute(
+        object? parameter)
     {
         _execute();
     }

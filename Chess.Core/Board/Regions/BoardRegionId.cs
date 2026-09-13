@@ -4,7 +4,8 @@ public sealed record BoardRegionId
 {
     public string Value { get; }
 
-    public BoardRegionId(string value)
+    public BoardRegionId(
+        string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {

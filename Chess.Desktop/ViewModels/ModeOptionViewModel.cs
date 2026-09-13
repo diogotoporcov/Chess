@@ -8,16 +8,13 @@ public sealed class ModeOptionViewModel
 {
     private readonly GameModeDefinition _mode;
 
-    public string Name =>
-        _mode.Variant.Name;
+    public string Name => _mode.Variant.Name;
 
-    public string Description =>
-        _mode.Description;
+    public string Description => _mode.Description;
 
     public string PlayerSummary { get; }
 
-    public string BoardSummary =>
-        _mode.Presentation.Board.Summary;
+    public string BoardSummary => _mode.Presentation.Board.Summary;
 
     public ICommand SelectCommand { get; }
 
@@ -30,16 +27,11 @@ public sealed class ModeOptionViewModel
 
         _mode = mode;
 
-        var playerCount =
-            mode.Variant.TurnOrder.Sides.Count;
+        var playerCount = mode.Variant.TurnOrder.Sides.Count;
 
         PlayerSummary =
-            playerCount == 1
-                ? "1 player"
-                : $"{playerCount} players";
+            playerCount == 1 ? "1 player" : $"{playerCount} players";
 
-        SelectCommand =
-            new RelayCommand(
-                () => selectMode(_mode));
+        SelectCommand = new RelayCommand(() => selectMode(_mode));
     }
 }

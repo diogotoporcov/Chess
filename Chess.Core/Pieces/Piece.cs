@@ -27,16 +27,13 @@ public sealed class Piece
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        EnsurePlacedAt(
-            context.BoardState,
-            from);
+        EnsurePlacedAt(context.BoardState, from);
 
         var generatedMoves = new HashSet<Move>();
 
         foreach (var pattern in Definition.MovementPatterns)
         {
-            foreach (var move in
-                     pattern.GeneratePseudoLegalMoves(
+            foreach (var move in pattern.GeneratePseudoLegalMoves(
                          context,
                          from,
                          Side))
@@ -55,19 +52,16 @@ public sealed class Piece
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        EnsurePlacedAt(
-            context.BoardState,
-            from);
+        EnsurePlacedAt(context.BoardState, from);
 
         var attackedSquares = new HashSet<Square>();
 
         foreach (var pattern in Definition.MovementPatterns)
         {
-            foreach (var square in pattern
-                         .GenerateAttackedSquares(
-                             context,
-                             from,
-                             Side))
+            foreach (var square in pattern.GenerateAttackedSquares(
+                         context,
+                         from,
+                         Side))
             {
                 if (attackedSquares.Add(square))
                 {
@@ -81,12 +75,8 @@ public sealed class Piece
         BoardState boardState,
         Square square)
     {
-        if (!boardState.TryGetPiece(
-                square,
-                out var occupyingPiece) ||
-            !ReferenceEquals(
-                occupyingPiece,
-                this))
+        if (!boardState.TryGetPiece(square, out var occupyingPiece) ||
+            !ReferenceEquals(occupyingPiece, this))
         {
             throw new InvalidOperationException(
                 "This piece is not placed on the specified square.");

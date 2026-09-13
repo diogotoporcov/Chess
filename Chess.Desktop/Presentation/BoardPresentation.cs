@@ -4,8 +4,7 @@ namespace Chess.Desktop.Presentation;
 
 public sealed class BoardPresentation
 {
-    private readonly ReadOnlyCollection<BoardSquarePresentation>
-        _squares;
+    private readonly ReadOnlyCollection<BoardSquarePresentation> _squares;
 
     public string Summary { get; }
 
@@ -15,8 +14,7 @@ public sealed class BoardPresentation
 
     public double Height { get; }
 
-    public IReadOnlyList<BoardSquarePresentation>
-        Squares => _squares;
+    public IReadOnlyList<BoardSquarePresentation> Squares => _squares;
 
     public BoardPresentation(
         string summary,
@@ -60,15 +58,10 @@ public sealed class BoardPresentation
         Summary = summary.Trim();
         SquareSize = squareSize;
 
-        Width =
-            squareArray.Max(square => square.X) +
-            squareSize;
+        Width = squareArray.Max(square => square.X) + squareSize;
 
-        Height =
-            squareArray.Max(square => square.Y) +
-            squareSize;
+        Height = squareArray.Max(square => square.Y) + squareSize;
 
-        _squares =
-            Array.AsReadOnly(squareArray);
+        _squares = Array.AsReadOnly(squareArray);
     }
 }

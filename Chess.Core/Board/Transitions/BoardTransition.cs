@@ -25,10 +25,6 @@ public sealed class BoardTransition
                 nameof(changes));
         }
 
-        Changes =
-            Array.AsReadOnly(
-            [
-                .. changes
-            ]);
+        Changes = Array.AsReadOnly([.. changes]);
     }
 }

@@ -34,9 +34,7 @@ public sealed class TurnOrder
 
             ArgumentNullException.ThrowIfNull(side);
 
-            if (!indexes.TryAdd(
-                    side,
-                    index))
+            if (!indexes.TryAdd(side, index))
             {
                 throw new ArgumentException(
                     "Turn order cannot contain the same side more than once.",
@@ -44,11 +42,7 @@ public sealed class TurnOrder
             }
         }
 
-        _sides =
-            Array.AsReadOnly(
-            [
-                .. sides
-            ]);
+        _sides = Array.AsReadOnly([.. sides]);
 
         _indexes = indexes.ToFrozenDictionary();
     }
@@ -66,9 +60,7 @@ public sealed class TurnOrder
     {
         ArgumentNullException.ThrowIfNull(side);
 
-        if (!_indexes.TryGetValue(
-                side,
-                out var index))
+        if (!_indexes.TryGetValue(side, out var index))
         {
             throw new ArgumentException(
                 "Side is not part of this turn order.",

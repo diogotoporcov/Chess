@@ -23,7 +23,8 @@ public static class Variant
     private const int WhitePawnRow = 6;
     private const int WhiteBackRankRow = 7;
 
-    public static GameVariantDefinition Definition { get; } = CreateDefinition();
+    public static GameVariantDefinition Definition { get; } =
+        CreateDefinition();
 
     public static Game CreateGame()
     {
@@ -32,42 +33,32 @@ public static class Variant
 
     private static GameVariantDefinition CreateDefinition()
     {
-        var executionResolver =
-            new CompositeMoveExecutionResolver(
-                new BasicMoveExecutionResolver(),
-                new PromotionMoveExecutionResolver(),
-                new EnPassantMoveExecutionResolver(),
-                new CastlingMoveExecutionResolver());
+        var executionResolver = new CompositeMoveExecutionResolver(
+            new BasicMoveExecutionResolver(),
+            new PromotionMoveExecutionResolver(),
+            new EnPassantMoveExecutionResolver(),
+            new CastlingMoveExecutionResolver());
 
-        var moveSimulator =
-            new GameMoveSimulator(
-                executionResolver);
+        var moveSimulator = new GameMoveSimulator(executionResolver);
 
-        var attackGenerator =
-            new PatternAttackGenerator();
+        var attackGenerator = new PatternAttackGenerator();
 
-        var checkDetector =
-            new CheckDetector(
-                attackGenerator);
+        var checkDetector = new CheckDetector(attackGenerator);
 
-        var pseudoLegalMoveGenerator =
-            new CastlingMoveGenerator(
-                new EnPassantMoveGenerator(
-                    new PromotionMoveGenerator(
-                        new PseudoLegalGameMoveGenerator())),
-                moveSimulator,
-                checkDetector);
+        var pseudoLegalMoveGenerator = new CastlingMoveGenerator(
+            new EnPassantMoveGenerator(
+                new PromotionMoveGenerator(new PseudoLegalGameMoveGenerator())),
+            moveSimulator,
+            checkDetector);
 
-        var legalMoveGenerator =
-            new LegalMoveGenerator(
-                pseudoLegalMoveGenerator,
-                moveSimulator,
-                checkDetector);
+        var legalMoveGenerator = new LegalMoveGenerator(
+            pseudoLegalMoveGenerator,
+            moveSimulator,
+            checkDetector);
 
-        var statusEvaluator =
-            new StatusEvaluator(
-                legalMoveGenerator,
-                checkDetector);
+        var statusEvaluator = new StatusEvaluator(
+            legalMoveGenerator,
+            checkDetector);
 
         return new GameVariantDefinition(
             new GameVariantId("chess:standard"),
@@ -82,35 +73,19 @@ public static class Variant
             CreateInitialPlacements());
     }
 
-    private static InitialPiecePlacement[]
-        CreateInitialPlacements()
+    private static InitialPiecePlacement[] CreateInitialPlacements()
     {
         var placements = new List<InitialPiecePlacement>();
 
-        AddPawns(
-            placements,
-            SideDefinitions.Black,
-            BlackPawnRow);
+        AddPawns(placements, SideDefinitions.Black, BlackPawnRow);
 
-        AddPawns(
-            placements,
-            SideDefinitions.White,
-            WhitePawnRow);
+        AddPawns(placements, SideDefinitions.White, WhitePawnRow);
 
-        AddBackRank(
-            placements,
-            SideDefinitions.Black,
-            BlackBackRankRow);
+        AddBackRank(placements, SideDefinitions.Black, BlackBackRankRow);
 
-        AddBackRank(
-            placements,
-            SideDefinitions.White,
-            WhiteBackRankRow);
+        AddBackRank(placements, SideDefinitions.White, WhiteBackRankRow);
 
-        return
-        [
-            .. placements
-        ];
+        return [.. placements];
     }
 
     private static void AddPawns(
@@ -122,9 +97,7 @@ public static class Variant
         {
             placements.Add(
                 new InitialPiecePlacement(
-                    BoardGeometry.SquareAt(
-                        row,
-                        column),
+                    BoardGeometry.SquareAt(row, column),
                     side,
                     PieceDefinitions.Pawn));
         }
@@ -137,23 +110,17 @@ public static class Variant
     {
         var definitions = new[]
         {
-            PieceDefinitions.Rook,
-            PieceDefinitions.Knight,
-            PieceDefinitions.Bishop,
-            PieceDefinitions.Queen,
-            PieceDefinitions.King,
-            PieceDefinitions.Bishop,
-            PieceDefinitions.Knight,
-            PieceDefinitions.Rook
+            PieceDefinitions.Rook, PieceDefinitions.Knight,
+            PieceDefinitions.Bishop, PieceDefinitions.Queen,
+            PieceDefinitions.King, PieceDefinitions.Bishop,
+            PieceDefinitions.Knight, PieceDefinitions.Rook
         };
 
         for (var column = 0; column < definitions.Length; column++)
         {
             placements.Add(
                 new InitialPiecePlacement(
-                    BoardGeometry.SquareAt(
-                        row,
-                        column),
+                    BoardGeometry.SquareAt(row, column),
                     side,
                     definitions[column]));
         }

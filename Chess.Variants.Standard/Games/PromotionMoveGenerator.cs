@@ -7,8 +7,7 @@ using Chess.Variants.Standard.Pieces;
 
 namespace Chess.Variants.Standard.Games;
 
-public sealed class PromotionMoveGenerator :
-    IGameMoveGenerator
+public sealed class PromotionMoveGenerator : IGameMoveGenerator
 {
     private readonly IGameMoveGenerator _innerMoveGenerator;
 
@@ -26,30 +25,23 @@ public sealed class PromotionMoveGenerator :
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        if (!gameState.BoardState.TryGetPiece(
-                from,
-                out var movingPiece))
+        if (!gameState.BoardState.TryGetPiece(from, out var movingPiece))
         {
             yield break;
         }
 
-        foreach (var move in _innerMoveGenerator
-                     .GenerateMoves(
-                         gameState,
-                         from))
+        foreach (var move in _innerMoveGenerator.GenerateMoves(gameState, from))
         {
-            if (movingPiece.Definition.Id !=
-                PieceDefinitions.Pawn.Id)
+            if (movingPiece.Definition.Id != PieceDefinitions.Pawn.Id)
             {
                 yield return move;
                 continue;
             }
 
-            var reachesPromotionRegion =
-                gameState.MovementContext.IsInRegion(
-                    movingPiece.Side,
-                    BoardRegions.Promotion,
-                    move.To);
+            var reachesPromotionRegion = gameState.MovementContext.IsInRegion(
+                movingPiece.Side,
+                BoardRegions.Promotion,
+                move.To);
 
             if (!reachesPromotionRegion)
             {
@@ -59,10 +51,7 @@ public sealed class PromotionMoveGenerator :
 
             foreach (var option in PromotionOptions.All)
             {
-                yield return new Move(
-                    move.From,
-                    move.To,
-                    option);
+                yield return new Move(move.From, move.To, option);
             }
         }
     }

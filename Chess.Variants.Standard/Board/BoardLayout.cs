@@ -11,9 +11,7 @@ public static class BoardLayout
         int row,
         int column)
     {
-        return BoardGeometry.SquareAt(
-            row,
-            column);
+        return BoardGeometry.SquareAt(row, column);
     }
 
     public static int GetRow(
@@ -35,7 +33,8 @@ public static class BoardLayout
     private static void EnsureValidSquare(
         Square square)
     {
-        const int squareCount = BoardGeometry.SideDimension * BoardGeometry.SideDimension;
+        const int squareCount =
+            BoardGeometry.SideDimension * BoardGeometry.SideDimension;
 
         if (square.Id is < 0 or >= squareCount)
         {

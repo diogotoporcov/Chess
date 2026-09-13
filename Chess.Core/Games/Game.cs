@@ -17,8 +17,7 @@ public sealed class Game
 
     public GameState State { get; }
 
-    public BoardState BoardState =>
-        State.BoardState;
+    public BoardState BoardState => State.BoardState;
 
     public GameStatus Status => _statusEvaluator.Evaluate(State);
 
@@ -46,9 +45,7 @@ public sealed class Game
     public IEnumerable<Move> GenerateMoves(
         Square from)
     {
-        return _moveGenerator.GenerateMoves(
-            State,
-            from);
+        return _moveGenerator.GenerateMoves(State, from);
     }
 
     public GameMoveRecord Execute(
@@ -62,14 +59,11 @@ public sealed class Game
                 "Cannot execute a move after the game has ended.");
         }
 
-        return _moveExecutor.Execute(
-            State,
-            move);
+        return _moveExecutor.Execute(State, move);
     }
 
     public GameMoveRecord UndoLastMove()
     {
-        return _moveExecutor.UndoLastMove(
-            State);
+        return _moveExecutor.UndoLastMove(State);
     }
 }

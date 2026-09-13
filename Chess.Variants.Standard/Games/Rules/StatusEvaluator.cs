@@ -29,22 +29,14 @@ public sealed class StatusEvaluator : IGameStatusEvaluator
 
         var currentSide = gameState.CurrentSide;
 
-        var isInCheck =
-            _checkDetector.IsInCheck(
-                gameState,
-                currentSide);
+        var isInCheck = _checkDetector.IsInCheck(gameState, currentSide);
 
-        var hasLegalMove =
-            HasLegalMove(
-                gameState,
-                currentSide);
+        var hasLegalMove = HasLegalMove(gameState, currentSide);
 
         if (hasLegalMove)
         {
             return new GameStatus(
-                isInCheck
-                    ? StatusDefinitions.Check
-                    : StatusDefinitions.Active,
+                isInCheck ? StatusDefinitions.Check : StatusDefinitions.Active,
                 isTerminal: false);
         }
 
@@ -55,10 +47,7 @@ public sealed class StatusEvaluator : IGameStatusEvaluator
                 isTerminal: true);
         }
 
-        var winner =
-            FindWinningSide(
-                gameState,
-                currentSide);
+        var winner = FindWinningSide(gameState, currentSide);
 
         return new GameStatus(
             StatusDefinitions.Checkmate,
@@ -70,14 +59,10 @@ public sealed class StatusEvaluator : IGameStatusEvaluator
         GameState gameState,
         Side side)
     {
-        foreach (var position in
-                 gameState.BoardState
-                     .GetPiecePositions(side))
+        foreach (var position in gameState.BoardState.GetPiecePositions(side))
         {
             if (_legalMoveGenerator
-                .GenerateMoves(
-                    gameState,
-                    position.Square)
+                .GenerateMoves(gameState, position.Square)
                 .Any())
             {
                 return true;
@@ -91,10 +76,11 @@ public sealed class StatusEvaluator : IGameStatusEvaluator
         GameState gameState,
         Side losingSide)
     {
-        var opponents =
-            gameState.TurnOrder.Sides
-                .Where(side => side != losingSide)
-                .ToArray();
+        var opponents = gameState
+            .TurnOrder
+            .Sides
+            .Where(side => side != losingSide)
+            .ToArray();
 
         if (opponents.Length != 1)
         {

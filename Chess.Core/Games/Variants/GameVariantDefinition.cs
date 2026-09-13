@@ -30,7 +30,8 @@ public sealed class GameVariantDefinition
 
     public TurnOrder TurnOrder { get; }
 
-    public IReadOnlyList<InitialPiecePlacement> InitialPlacements => _initialPlacements;
+    public IReadOnlyList<InitialPiecePlacement> InitialPlacements =>
+        _initialPlacements;
 
     public GameVariantDefinition(
         GameVariantId id,
@@ -104,11 +105,7 @@ public sealed class GameVariantDefinition
 
         _statusEvaluator = statusEvaluator;
 
-        _initialPlacements =
-            Array.AsReadOnly(
-                [
-                    .. initialPlacements
-                ]);
+        _initialPlacements = Array.AsReadOnly([.. initialPlacements]);
     }
 
     public Game CreateGame()
@@ -119,28 +116,21 @@ public sealed class GameVariantDefinition
         {
             boardBuilder.PlacePiece(
                 placement.Square,
-                new Piece(
-                    placement.Side,
-                    placement.Definition));
+                new Piece(placement.Side, placement.Definition));
         }
 
         var boardState = boardBuilder.Build();
 
-        var movementContext =
-            new MovementContext(
-                boardState,
-                _relativeDirectionResolver,
-                _boardRegionResolver);
+        var movementContext = new MovementContext(
+            boardState,
+            _relativeDirectionResolver,
+            _boardRegionResolver);
 
-        var gameState =
-            new GameState(
-                movementContext,
-                TurnOrder);
+        var gameState = new GameState(movementContext, TurnOrder);
 
-        var moveExecutor =
-            new GameMoveExecutor(
-                _moveGenerator,
-                _moveExecutionResolver);
+        var moveExecutor = new GameMoveExecutor(
+            _moveGenerator,
+            _moveExecutionResolver);
 
         return new Game(
             this,

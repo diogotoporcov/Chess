@@ -2,8 +2,7 @@ using Chess.Core.Board;
 
 namespace Chess.Desktop.ViewModels;
 
-public sealed class SquareViewModel :
-    ViewModelBase
+public sealed class SquareViewModel : ViewModelBase
 {
     private string? _pieceImageSource;
 
@@ -37,40 +36,28 @@ public sealed class SquareViewModel :
     {
         get => _pieceImageSource;
 
-        set =>
-            SetProperty(
-                ref _pieceImageSource,
-                value);
+        set => SetProperty(ref _pieceImageSource, value);
     }
 
     public bool IsSelected
     {
         get => _isSelected;
 
-        set =>
-            SetProperty(
-                ref _isSelected,
-                value);
+        set => SetProperty(ref _isSelected, value);
     }
 
     public bool IsLegalDestination
     {
         get => _isLegalDestination;
 
-        set =>
-            SetProperty(
-                ref _isLegalDestination,
-                value);
+        set => SetProperty(ref _isLegalDestination, value);
     }
 
     public bool IsCaptureDestination
     {
         get => _isCaptureDestination;
 
-        set =>
-            SetProperty(
-                ref _isCaptureDestination,
-                value);
+        set => SetProperty(ref _isCaptureDestination, value);
     }
 
     public SquareViewModel(
@@ -92,22 +79,16 @@ public sealed class SquareViewModel :
         Y = y;
         Size = size;
 
-        PieceSize =
-            size * 7.0 / 9.0;
+        PieceSize = size * 7.0 / 9.0;
 
-        SelectionMarkerSize =
-            size * 0.84;
+        SelectionMarkerSize = size * 0.84;
 
-        LegalMoveMarkerSize =
-            size * 0.18;
+        LegalMoveMarkerSize = size * 0.18;
 
-        CaptureMarkerSize =
-            size * 0.88;
+        CaptureMarkerSize = size * 0.88;
 
-        CaptureMarkerStrokeThickness =
-            size * 0.045;
+        CaptureMarkerStrokeThickness = size * 0.045;
 
-        IsLightSquare =
-            isLightSquare;
+        IsLightSquare = isLightSquare;
     }
 }

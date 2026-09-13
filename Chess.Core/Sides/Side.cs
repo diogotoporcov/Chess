@@ -4,13 +4,12 @@ public sealed record Side
 {
     public string Id { get; }
 
-    public Side(string id)
+    public Side(
+        string id)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
-            throw new ArgumentException(
-                "Side id cannot be empty.",
-                nameof(id));
+            throw new ArgumentException("Side id cannot be empty.", nameof(id));
         }
 
         Id = id.Trim();

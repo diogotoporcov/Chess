@@ -19,9 +19,7 @@ internal static class EnPassantRules
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        if (!gameState.BoardState.TryGetPiece(
-                from,
-                out var pawn))
+        if (!gameState.BoardState.TryGetPiece(from, out var pawn))
         {
             yield break;
         }
@@ -32,7 +30,8 @@ internal static class EnPassantRules
             yield break;
         }
 
-        foreach (var destinationDirection in GetDestinationDirections(pawn.Side))
+        foreach (var destinationDirection in
+                 GetDestinationDirections(pawn.Side))
         {
             if (!gameState.BoardState.Topology.TryGetNext(
                     from,
@@ -42,17 +41,9 @@ internal static class EnPassantRules
                 continue;
             }
 
-            var move =
-                new Move(
-                    from,
-                    destination,
-                    MoveOptions.EnPassant);
+            var move = new Move(from, destination, MoveOptions.EnPassant);
 
-            if (TryGetCapturedPawn(
-                    gameState,
-                    move,
-                    out _,
-                    out _))
+            if (TryGetCapturedPawn(gameState, move, out _, out _))
             {
                 yield return move;
             }
@@ -77,9 +68,7 @@ internal static class EnPassantRules
 
         var boardState = gameState.BoardState;
 
-        if (!boardState.TryGetPiece(
-                move.From,
-                out var movingPawn))
+        if (!boardState.TryGetPiece(move.From, out var movingPawn))
         {
             return false;
         }
@@ -104,9 +93,7 @@ internal static class EnPassantRules
             return false;
         }
 
-        if (!boardState.TryGetPiece(
-                capturedPawnSquare,
-                out capturedPawn))
+        if (!boardState.TryGetPiece(capturedPawnSquare, out capturedPawn))
         {
             return false;
         }
@@ -139,7 +126,8 @@ internal static class EnPassantRules
     {
         var topology = gameState.BoardState.Topology;
 
-        foreach (var (horizontalDirection, destinationDirection) in GetCaptureDirections(movingSide))
+        foreach (var (horizontalDirection, destinationDirection) in
+                 GetCaptureDirections(movingSide))
         {
             if (!topology.TryGetNext(
                     from,
@@ -225,12 +213,12 @@ internal static class EnPassantRules
         }
 
         var originChange =
-            lastMove.Execution.Transition.Changes
-                .SingleOrDefault(change => change.Square == move.From);
+            lastMove.Execution.Transition.Changes.SingleOrDefault(change =>
+                change.Square == move.From);
 
         var destinationChange =
-            lastMove.Execution.Transition.Changes
-                .SingleOrDefault(change => change.Square == move.To);
+            lastMove.Execution.Transition.Changes.SingleOrDefault(change =>
+                change.Square == move.To);
 
         if (originChange is null ||
             destinationChange is null)
@@ -238,20 +226,14 @@ internal static class EnPassantRules
             return false;
         }
 
-        return
-            ReferenceEquals(
-                originChange.Before,
-                pawn) &&
-            originChange.After is null &&
-            destinationChange.Before is null &&
-            ReferenceEquals(
-                destinationChange.After,
-                pawn);
+        return ReferenceEquals(originChange.Before, pawn) &&
+               originChange.After is null &&
+               destinationChange.Before is null &&
+               ReferenceEquals(destinationChange.After, pawn);
     }
 
-    private static IEnumerable<Direction>
-        GetDestinationDirections(
-            Side side)
+    private static IEnumerable<Direction> GetDestinationDirections(
+        Side side)
     {
         if (side == SideDefinitions.White)
         {
@@ -271,34 +253,24 @@ internal static class EnPassantRules
             $"Unsupported side '{side}' for standard chess.");
     }
 
-    private static IEnumerable<(
-        Direction Horizontal,
-        Direction Destination)>
+    private static IEnumerable<( Direction Horizontal, Direction Destination)>
         GetCaptureDirections(
             Side side)
     {
         if (side == SideDefinitions.White)
         {
-            yield return (
-                CompassDirections.West,
-                CompassDirections.NorthWest);
+            yield return (CompassDirections.West, CompassDirections.NorthWest);
 
-            yield return (
-                CompassDirections.East,
-                CompassDirections.NorthEast);
+            yield return (CompassDirections.East, CompassDirections.NorthEast);
 
             yield break;
         }
 
         if (side == SideDefinitions.Black)
         {
-            yield return (
-                CompassDirections.West,
-                CompassDirections.SouthWest);
+            yield return (CompassDirections.West, CompassDirections.SouthWest);
 
-            yield return (
-                CompassDirections.East,
-                CompassDirections.SouthEast);
+            yield return (CompassDirections.East, CompassDirections.SouthEast);
 
             yield break;
         }

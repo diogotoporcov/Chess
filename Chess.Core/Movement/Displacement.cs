@@ -4,8 +4,7 @@ public sealed class Displacement : IEquatable<Displacement>
 {
     private readonly IReadOnlyList<DisplacementComponent> _components;
 
-    public IReadOnlyList<DisplacementComponent> Components =>
-        _components;
+    public IReadOnlyList<DisplacementComponent> Components => _components;
 
     public Displacement(
         params DisplacementComponent[] components)
@@ -28,27 +27,26 @@ public sealed class Displacement : IEquatable<Displacement>
                 nameof(components));
         }
 
-        var orderedComponents =
-            components
-                .OrderBy(
-                    component => component.Direction.SortKey,
-                    StringComparer.Ordinal)
-                .ToArray();
+        var orderedComponents = components
+            .OrderBy(
+                component => component.Direction.SortKey,
+                StringComparer.Ordinal)
+            .ToArray();
 
-        _components =
-            Array.AsReadOnly(orderedComponents);
+        _components = Array.AsReadOnly(orderedComponents);
     }
 
-    public bool Equals(Displacement? other)
+    public bool Equals(
+        Displacement? other)
     {
         return other is not null &&
                _components.SequenceEqual(other._components);
     }
 
-    public override bool Equals(object? obj)
+    public override bool Equals(
+        object? obj)
     {
-        return obj is Displacement other &&
-               Equals(other);
+        return obj is Displacement other && Equals(other);
     }
 
     public override int GetHashCode()

@@ -3,8 +3,7 @@ using Chess.Core.Sides;
 
 namespace Chess.Core.Movement.Patterns;
 
-public sealed class SlidingMovementPattern :
-    IMovementPattern
+public sealed class SlidingMovementPattern : IMovementPattern
 {
     private readonly DirectionReference _direction;
     private readonly int? _maxDistance;
@@ -47,34 +46,22 @@ public sealed class SlidingMovementPattern :
 
         var boardState = context.BoardState;
 
-        var direction = _direction.Resolve(
-            context,
-            movingSide);
+        var direction = _direction.Resolve(context, movingSide);
 
         var current = from;
         var distance = 0;
 
-        while (
-            (!_maxDistance.HasValue ||
-             distance < _maxDistance.Value) &&
-            boardState.Topology.TryGetNext(
-                current,
-                direction,
-                out var next))
+        while ((!_maxDistance.HasValue || distance < _maxDistance.Value) &&
+               boardState.Topology.TryGetNext(current, direction, out var next))
         {
             distance++;
 
-            if (!boardState.TryGetPiece(
-                    next,
-                    out var occupyingPiece))
+            if (!boardState.TryGetPiece(next, out var occupyingPiece))
             {
-                if (_targetMode is
-                    MovementTargetMode.MoveOrCapture or
-                    MovementTargetMode.MoveOnly)
+                if (_targetMode is MovementTargetMode.MoveOrCapture
+                    or MovementTargetMode.MoveOnly)
                 {
-                    yield return new Move(
-                        from,
-                        next);
+                    yield return new Move(from, next);
                 }
 
                 current = next;
@@ -82,13 +69,10 @@ public sealed class SlidingMovementPattern :
             }
 
             if (occupyingPiece.Side != movingSide &&
-                _targetMode is
-                    MovementTargetMode.MoveOrCapture or
-                    MovementTargetMode.CaptureOnly)
+                _targetMode is MovementTargetMode.MoveOrCapture
+                    or MovementTargetMode.CaptureOnly)
             {
-                yield return new Move(
-                    from,
-                    next);
+                yield return new Move(from, next);
             }
 
             yield break;
@@ -110,20 +94,13 @@ public sealed class SlidingMovementPattern :
 
         var boardState = context.BoardState;
 
-        var direction = _direction.Resolve(
-            context,
-            attackingSide);
+        var direction = _direction.Resolve(context, attackingSide);
 
         var current = from;
         var distance = 0;
 
-        while (
-            (!_maxDistance.HasValue ||
-             distance < _maxDistance.Value) &&
-            boardState.Topology.TryGetNext(
-                current,
-                direction,
-                out var next))
+        while ((!_maxDistance.HasValue || distance < _maxDistance.Value) &&
+               boardState.Topology.TryGetNext(current, direction, out var next))
         {
             distance++;
 

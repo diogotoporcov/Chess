@@ -5,8 +5,7 @@ using Chess.Variants.Standard.Games.Rules;
 
 namespace Chess.Variants.Standard.Games;
 
-public sealed class LegalMoveGenerator :
-    IGameMoveGenerator
+public sealed class LegalMoveGenerator : IGameMoveGenerator
 {
     private readonly IGameMoveGenerator _pseudoLegalMoveGenerator;
 
@@ -36,9 +35,7 @@ public sealed class LegalMoveGenerator :
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        if (!gameState.BoardState.TryGetPiece(
-                from,
-                out var movingPiece))
+        if (!gameState.BoardState.TryGetPiece(from, out var movingPiece))
         {
             yield break;
         }
@@ -48,28 +45,21 @@ public sealed class LegalMoveGenerator :
             yield break;
         }
 
-        foreach (var move in _pseudoLegalMoveGenerator
-                     .GenerateMoves(
-                         gameState,
-                         from))
+        foreach (var move in _pseudoLegalMoveGenerator.GenerateMoves(
+                     gameState,
+                     from))
         {
-            if (CapturesKing(
-                    gameState,
-                    move))
+            if (CapturesKing(gameState, move))
             {
                 continue;
             }
 
-            var leavesKingInCheck =
-                _moveSimulator.Evaluate(
-                    gameState,
-                    move,
-                    (
-                        simulatedState,
-                        _) =>
-                        _checkDetector.IsInCheck(
-                            simulatedState,
-                            movingPiece.Side));
+            var leavesKingInCheck = _moveSimulator.Evaluate(
+                gameState,
+                move,
+                (simulatedState, _) => _checkDetector.IsInCheck(
+                    simulatedState,
+                    movingPiece.Side));
 
             if (!leavesKingInCheck)
             {
@@ -82,10 +72,7 @@ public sealed class LegalMoveGenerator :
         GameState gameState,
         Move move)
     {
-        return
-            gameState.BoardState.TryGetPiece(
-                move.To,
-                out var targetPiece) &&
-            KingRules.IsKing(targetPiece);
+        return gameState.BoardState.TryGetPiece(move.To, out var targetPiece) &&
+               KingRules.IsKing(targetPiece);
     }
 }

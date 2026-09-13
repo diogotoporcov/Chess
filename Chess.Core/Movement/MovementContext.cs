@@ -44,18 +44,13 @@ public sealed class MovementContext
                 nameof(square));
         }
 
-        return _boardRegionResolver.Contains(
-            side,
-            regionId,
-            square);
+        return _boardRegionResolver.Contains(side, regionId, square);
     }
 
     internal Direction ResolveRelativeDirection(
         Side side,
         RelativeDirection relativeDirection)
     {
-        return _relativeDirectionResolver.Resolve(
-            side,
-            relativeDirection);
+        return _relativeDirectionResolver.Resolve(side, relativeDirection);
     }
 }

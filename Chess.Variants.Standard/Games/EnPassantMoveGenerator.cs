@@ -5,8 +5,7 @@ using Chess.Variants.Standard.Games.Rules;
 
 namespace Chess.Variants.Standard.Games;
 
-public sealed class EnPassantMoveGenerator :
-    IGameMoveGenerator
+public sealed class EnPassantMoveGenerator : IGameMoveGenerator
 {
     private readonly IGameMoveGenerator _innerMoveGenerator;
 
@@ -24,18 +23,12 @@ public sealed class EnPassantMoveGenerator :
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        foreach (var move in _innerMoveGenerator
-                     .GenerateMoves(
-                         gameState,
-                         from))
+        foreach (var move in _innerMoveGenerator.GenerateMoves(gameState, from))
         {
             yield return move;
         }
 
-        foreach (var move in EnPassantRules
-                     .GenerateMoves(
-                         gameState,
-                         from))
+        foreach (var move in EnPassantRules.GenerateMoves(gameState, from))
         {
             yield return move;
         }

@@ -7,14 +7,11 @@ namespace Chess.Core.Movement.Orientation;
 public sealed class SideOrientationMap : IRelativeDirectionResolver
 {
     private readonly FrozenDictionary<
-        (Side Side, RelativeDirection RelativeDirection),
-        Direction> _mappings;
+        (Side Side, RelativeDirection RelativeDirection), Direction> _mappings;
 
     public SideOrientationMap(
-        params (
-            Side Side,
-            RelativeDirection RelativeDirection,
-            Direction Direction)[] mappings)
+        params ( Side Side, RelativeDirection RelativeDirection, Direction
+            Direction)[] mappings)
     {
         ArgumentNullException.ThrowIfNull(mappings);
 
@@ -25,23 +22,18 @@ public sealed class SideOrientationMap : IRelativeDirectionResolver
                 nameof(mappings));
         }
 
-        var dictionary = new Dictionary<
-            (Side Side, RelativeDirection RelativeDirection),
-            Direction>();
+        var dictionary =
+            new Dictionary<(Side Side, RelativeDirection RelativeDirection),
+                Direction>();
 
         foreach (var mapping in mappings)
         {
             ArgumentNullException.ThrowIfNull(mapping.Side);
-            ArgumentNullException.ThrowIfNull(
-                mapping.RelativeDirection);
-            ArgumentNullException.ThrowIfNull(
-                mapping.Direction);
+            ArgumentNullException.ThrowIfNull(mapping.RelativeDirection);
+            ArgumentNullException.ThrowIfNull(mapping.Direction);
 
             if (!dictionary.TryAdd(
-                    (
-                        mapping.Side,
-                        mapping.RelativeDirection
-                    ),
+                    (mapping.Side, mapping.RelativeDirection),
                     mapping.Direction))
             {
                 throw new ArgumentException(
@@ -58,8 +50,7 @@ public sealed class SideOrientationMap : IRelativeDirectionResolver
         RelativeDirection relativeDirection)
     {
         ArgumentNullException.ThrowIfNull(side);
-        ArgumentNullException.ThrowIfNull(
-            relativeDirection);
+        ArgumentNullException.ThrowIfNull(relativeDirection);
 
         if (!_mappings.TryGetValue(
                 (side, relativeDirection),

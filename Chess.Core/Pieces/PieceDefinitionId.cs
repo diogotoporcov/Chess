@@ -4,7 +4,8 @@ public sealed record PieceDefinitionId
 {
     public string Value { get; }
 
-    public PieceDefinitionId(string value)
+    public PieceDefinitionId(
+        string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {

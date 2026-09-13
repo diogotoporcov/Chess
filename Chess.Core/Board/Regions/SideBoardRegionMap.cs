@@ -6,14 +6,11 @@ namespace Chess.Core.Board.Regions;
 public sealed class SideBoardRegionMap : IBoardRegionResolver
 {
     private readonly FrozenDictionary<
-        (Side Side, BoardRegionId RegionId),
-        BoardRegion> _regions;
+        (Side Side, BoardRegionId RegionId), BoardRegion> _regions;
 
     public SideBoardRegionMap(
-        params (
-            Side Side,
-            BoardRegionId RegionId,
-            BoardRegion Region)[] mappings)
+        params ( Side Side, BoardRegionId RegionId, BoardRegion Region)[]
+            mappings)
     {
         ArgumentNullException.ThrowIfNull(mappings);
 
@@ -24,9 +21,8 @@ public sealed class SideBoardRegionMap : IBoardRegionResolver
                 nameof(mappings));
         }
 
-        var regions = new Dictionary<
-            (Side Side, BoardRegionId RegionId),
-            BoardRegion>();
+        var regions =
+            new Dictionary<(Side Side, BoardRegionId RegionId), BoardRegion>();
 
         foreach (var mapping in mappings)
         {
@@ -55,9 +51,7 @@ public sealed class SideBoardRegionMap : IBoardRegionResolver
         ArgumentNullException.ThrowIfNull(side);
         ArgumentNullException.ThrowIfNull(regionId);
 
-        if (!_regions.TryGetValue(
-                (side, regionId),
-                out var region))
+        if (!_regions.TryGetValue((side, regionId), out var region))
         {
             throw new InvalidOperationException(
                 $"No board region mapping exists for side '{side}' " +

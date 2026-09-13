@@ -23,13 +23,13 @@ internal static class KingRules
         ArgumentNullException.ThrowIfNull(gameState);
         ArgumentNullException.ThrowIfNull(side);
 
-        var kingSquares =
-            gameState.BoardState
-                .GetPiecePositions(side)
-                .Where(position => IsKing(position.Piece))
-                .Select(position => position.Square)
-                .Take(2)
-                .ToArray();
+        var kingSquares = gameState
+            .BoardState
+            .GetPiecePositions(side)
+            .Where(position => IsKing(position.Piece))
+            .Select(position => position.Square)
+            .Take(2)
+            .ToArray();
 
         if (kingSquares.Length != 1)
         {

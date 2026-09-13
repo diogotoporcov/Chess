@@ -4,11 +4,11 @@ public sealed class BoardTopologyBuilder
 {
     private readonly HashSet<Square> _squares = [];
 
-    private readonly Dictionary<
-        (Square From, Direction Direction),
-        Square> _connections = [];
+    private readonly Dictionary<(Square From, Direction Direction), Square>
+        _connections = [];
 
-    public bool AddSquare(Square square)
+    public bool AddSquare(
+        Square square)
     {
         return _squares.Add(square);
     }
@@ -30,9 +30,7 @@ public sealed class BoardTopologyBuilder
 
     public BoardTopology Build()
     {
-        return new BoardTopology(
-            _squares,
-            _connections);
+        return new BoardTopology(_squares, _connections);
     }
 
     private void EnsureSquareExists(

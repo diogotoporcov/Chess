@@ -8,28 +8,24 @@ using Chess.Variants.Standard.Sides;
 
 namespace Chess.Desktop.Presentation.Standard;
 
-public sealed class StandardChessPresentation :
-    IGamePresentation
+public sealed class StandardChessPresentation : IGamePresentation
 {
     private const double SquareSize = 72;
 
     private const string PieceAssetRoot =
         "/Chess.Desktop;component/Assets/Variants/Standard/Pieces/sepia";
 
-    private readonly IReadOnlyDictionary<Side, string>
-        _sideNames =
-            new Dictionary<Side, string>
-            {
-                [SideDefinitions.White] = "White",
-                [SideDefinitions.Black] = "Black"
-            };
+    private readonly IReadOnlyDictionary<Side, string> _sideNames =
+        new Dictionary<Side, string>
+        {
+            [SideDefinitions.White] = "White",
+            [SideDefinitions.Black] = "Black"
+        };
 
-    private readonly IReadOnlyDictionary<
-        (Side Side, PieceDefinitionId DefinitionId),
-        string> _pieceAssets =
-            new Dictionary<
-                (Side Side, PieceDefinitionId DefinitionId),
-                string>
+    private readonly
+        IReadOnlyDictionary<(Side Side, PieceDefinitionId DefinitionId), string>
+        _pieceAssets =
+            new Dictionary<(Side Side, PieceDefinitionId DefinitionId), string>
             {
                 [(SideDefinitions.White, PieceDefinitions.King.Id)] =
                     $"{PieceAssetRoot}/white-king.png",
@@ -57,19 +53,16 @@ public sealed class StandardChessPresentation :
                     $"{PieceAssetRoot}/black-pawn.png"
             };
 
-    public BoardPresentation Board { get; } =
-        CreateBoard();
+    public BoardPresentation Board { get; } = CreateBoard();
 
     public string GetSideName(
         Side side)
     {
         ArgumentNullException.ThrowIfNull(side);
 
-        return _sideNames.TryGetValue(
-            side,
-            out var name)
-                ? name
-                : FormatIdentifier(side.Id);
+        return _sideNames.TryGetValue(side, out var name)
+            ? name
+            : FormatIdentifier(side.Id);
     }
 
     public string GetStatusName(
@@ -77,8 +70,7 @@ public sealed class StandardChessPresentation :
     {
         ArgumentNullException.ThrowIfNull(statusId);
 
-        return FormatIdentifier(
-            statusId.Value);
+        return FormatIdentifier(statusId.Value);
     }
 
     public string GetPieceImageSource(
@@ -87,10 +79,7 @@ public sealed class StandardChessPresentation :
         ArgumentNullException.ThrowIfNull(piece);
 
         if (_pieceAssets.TryGetValue(
-                (
-                    piece.Side,
-                    piece.Definition.Id
-                ),
+                (piece.Side, piece.Definition.Id),
                 out var source))
         {
             return source;
@@ -103,22 +92,15 @@ public sealed class StandardChessPresentation :
 
     private static BoardPresentation CreateBoard()
     {
-        var squares =
-            new List<BoardSquarePresentation>();
+        var squares = new List<BoardSquarePresentation>();
 
-        for (var row = 0;
-             row < BoardLayout.Rows;
-             row++)
+        for (var row = 0; row < BoardLayout.Rows; row++)
         {
-            for (var column = 0;
-                 column < BoardLayout.Columns;
-                 column++)
+            for (var column = 0; column < BoardLayout.Columns; column++)
             {
                 squares.Add(
                     new BoardSquarePresentation(
-                        BoardLayout.GetSquare(
-                            row,
-                            column),
+                        BoardLayout.GetSquare(row, column),
                         column * SquareSize,
                         row * SquareSize,
                         (row + column) % 2 == 0));
@@ -134,17 +116,12 @@ public sealed class StandardChessPresentation :
     private static string FormatIdentifier(
         string value)
     {
-        var separatorIndex =
-            value.LastIndexOf(':');
+        var separatorIndex = value.LastIndexOf(':');
 
-        var identifier =
-            separatorIndex >= 0
-                ? value[(separatorIndex + 1)..]
-                : value;
+        var identifier = separatorIndex >= 0
+            ? value[(separatorIndex + 1)..]
+            : value;
 
-        return CultureInfo
-            .InvariantCulture
-            .TextInfo
-            .ToTitleCase(identifier);
+        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(identifier);
     }
 }

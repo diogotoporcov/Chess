@@ -5,8 +5,7 @@ namespace Chess.Core.Games.Status;
 
 public sealed class GameStatus
 {
-    private readonly ReadOnlyCollection<Side>
-        _winners;
+    private readonly ReadOnlyCollection<Side> _winners;
 
     public GameStatusId Id { get; }
 
@@ -32,7 +31,8 @@ public sealed class GameStatus
 
         if (winners
                 .Distinct()
-                .Count() != winners.Length)
+                .Count() !=
+            winners.Length)
         {
             throw new ArgumentException(
                 "A game status cannot contain the same winner more than once.",
@@ -42,10 +42,6 @@ public sealed class GameStatus
         Id = id;
         IsTerminal = isTerminal;
 
-        _winners =
-            Array.AsReadOnly(
-            [
-                .. winners
-            ]);
+        _winners = Array.AsReadOnly([.. winners]);
     }
 }

@@ -7,17 +7,13 @@ public static class BoardTopologyFactory
 {
     public static BoardTopology Create()
     {
-        var builder =
-            new BoardTopologyBuilder();
+        var builder = new BoardTopologyBuilder();
 
         for (var row = 0; row < BoardGeometry.SideDimension; row++)
         {
             for (var column = 0; column < BoardGeometry.SideDimension; column++)
             {
-                builder.AddSquare(
-                    BoardGeometry.SquareAt(
-                        row,
-                        column));
+                builder.AddSquare(BoardGeometry.SquareAt(row, column));
             }
         }
 
@@ -33,10 +29,7 @@ public static class BoardTopologyFactory
         {
             for (var column = 0; column < BoardGeometry.SideDimension; column++)
             {
-                var from =
-                    BoardGeometry.SquareAt(
-                        row,
-                        column);
+                var from = BoardGeometry.SquareAt(row, column);
 
                 TryConnect(
                     builder,
@@ -104,9 +97,7 @@ public static class BoardTopologyFactory
         int targetColumn,
         Direction direction)
     {
-        if (!BoardGeometry.Contains(
-                targetRow,
-                targetColumn))
+        if (!BoardGeometry.Contains(targetRow, targetColumn))
         {
             return;
         }
@@ -114,8 +105,6 @@ public static class BoardTopologyFactory
         builder.Connect(
             from,
             direction,
-            BoardGeometry.SquareAt(
-                targetRow,
-                targetColumn));
+            BoardGeometry.SquareAt(targetRow, targetColumn));
     }
 }

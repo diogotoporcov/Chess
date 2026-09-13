@@ -2,8 +2,7 @@
 
 namespace Chess.Core.Movement;
 
-public sealed class CompositeMoveExecutionResolver :
-    IMoveExecutionResolver
+public sealed class CompositeMoveExecutionResolver : IMoveExecutionResolver
 {
     private readonly IReadOnlyList<IMoveExecutionResolver> _resolvers;
 
@@ -19,11 +18,7 @@ public sealed class CompositeMoveExecutionResolver :
                 nameof(resolvers));
         }
 
-        _resolvers =
-            Array.AsReadOnly(
-                [
-                    .. resolvers
-                ]);
+        _resolvers = Array.AsReadOnly([.. resolvers]);
     }
 
     public bool CanResolve(
@@ -38,11 +33,10 @@ public sealed class CompositeMoveExecutionResolver :
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        var matchingResolvers =
-            _resolvers
-                .Where(resolver => resolver.CanResolve(move))
-                .Take(2)
-                .ToArray();
+        var matchingResolvers = _resolvers
+            .Where(resolver => resolver.CanResolve(move))
+            .Take(2)
+            .ToArray();
 
         if (matchingResolvers.Length == 0)
         {
@@ -56,8 +50,7 @@ public sealed class CompositeMoveExecutionResolver :
                 $"More than one move execution resolver can handle move option '{move.OptionId?.ToString() ?? "none"}'.");
         }
 
-        return matchingResolvers[0].Resolve(
-            gameState,
-            move);
+        return matchingResolvers[0]
+            .Resolve(gameState, move);
     }
 }

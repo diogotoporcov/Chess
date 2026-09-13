@@ -5,8 +5,7 @@ using Chess.Variants.Standard.Games.Rules;
 
 namespace Chess.Variants.Standard.Games;
 
-public sealed class CastlingMoveGenerator :
-    IGameMoveGenerator
+public sealed class CastlingMoveGenerator : IGameMoveGenerator
 {
     private readonly IGameMoveGenerator _innerMoveGenerator;
 
@@ -38,32 +37,22 @@ public sealed class CastlingMoveGenerator :
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        foreach (var move in _innerMoveGenerator
-                     .GenerateMoves(
-                         gameState,
-                         from))
+        foreach (var move in _innerMoveGenerator.GenerateMoves(gameState, from))
         {
             yield return move;
         }
 
-        if (!gameState.BoardState.TryGetPiece(
-                from,
-                out var king))
+        if (!gameState.BoardState.TryGetPiece(from, out var king))
         {
             yield break;
         }
 
-        if (_checkDetector.IsInCheck(
-                gameState,
-                king.Side))
+        if (_checkDetector.IsInCheck(gameState, king.Side))
         {
             yield break;
         }
 
-        foreach (var move in CastlingRules
-                     .GenerateCandidates(
-                         gameState,
-                         from))
+        foreach (var move in CastlingRules.GenerateCandidates(gameState, from))
         {
             if (!CastlingRules.TryValidateStructure(
                     gameState,
@@ -73,21 +62,13 @@ public sealed class CastlingMoveGenerator :
                 continue;
             }
 
-            var throughMove =
-                new Move(
-                    plan.KingFrom,
-                    plan.KingThrough);
+            var throughMove = new Move(plan.KingFrom, plan.KingThrough);
 
-            var crossesAttackedSquare =
-                _moveSimulator.Evaluate(
-                    gameState,
-                    throughMove,
-                    (
-                        simulatedState,
-                        _) =>
-                        _checkDetector.IsInCheck(
-                            simulatedState,
-                            king.Side));
+            var crossesAttackedSquare = _moveSimulator.Evaluate(
+                gameState,
+                throughMove,
+                (simulatedState, _) =>
+                    _checkDetector.IsInCheck(simulatedState, king.Side));
 
             if (crossesAttackedSquare)
             {

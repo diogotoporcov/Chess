@@ -17,11 +17,9 @@ public sealed class ModeSelectionViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(startMode);
 
         _modes = Array.AsReadOnly(
-            catalog.Modes
-                .Select(mode =>
-                    new ModeOptionViewModel(
-                        mode,
-                        startMode))
+            catalog
+                .Modes
+                .Select(mode => new ModeOptionViewModel(mode, startMode))
                 .ToArray());
     }
 }

@@ -18,18 +18,14 @@ internal static class BoardGeometry
         int row,
         int column)
     {
-        if (!Contains(
-                row,
-                column))
+        if (!Contains(row, column))
         {
             throw new ArgumentOutOfRangeException(
                 nameof(row),
                 "Board coordinates must be inside the standard 8x8 board.");
         }
 
-        return new Square(
-            row * SideDimension +
-            column);
+        return new Square(row * SideDimension + column);
     }
 
     public static IEnumerable<Square> GetRow(
@@ -44,9 +40,7 @@ internal static class BoardGeometry
 
         for (var column = 0; column < SideDimension; column++)
         {
-            yield return SquareAt(
-                row,
-                column);
+            yield return SquareAt(row, column);
         }
     }
 }

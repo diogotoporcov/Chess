@@ -18,9 +18,7 @@ internal static class CastlingRules
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        if (!gameState.BoardState.TryGetPiece(
-                from,
-                out var king))
+        if (!gameState.BoardState.TryGetPiece(from, out var king))
         {
             yield break;
         }
@@ -33,24 +31,16 @@ internal static class CastlingRules
 
         foreach (var optionId in GetOptions())
         {
-            var plan = CreatePlan(
-                king.Side,
-                optionId);
+            var plan = CreatePlan(king.Side, optionId);
 
             if (from != plan.KingFrom)
             {
                 continue;
             }
 
-            var move = new Move(
-                plan.KingFrom,
-                plan.KingTo,
-                optionId);
+            var move = new Move(plan.KingFrom, plan.KingTo, optionId);
 
-            if (TryValidateStructure(
-                    gameState,
-                    move,
-                    out _))
+            if (TryValidateStructure(gameState, move, out _))
             {
                 yield return move;
             }
@@ -72,9 +62,7 @@ internal static class CastlingRules
             return false;
         }
 
-        if (!gameState.BoardState.TryGetPiece(
-                move.From,
-                out var king))
+        if (!gameState.BoardState.TryGetPiece(move.From, out var king))
         {
             return false;
         }
@@ -93,9 +81,7 @@ internal static class CastlingRules
             return false;
         }
 
-        if (!gameState.BoardState.TryGetPiece(
-                candidate.RookFrom,
-                out var rook))
+        if (!gameState.BoardState.TryGetPiece(candidate.RookFrom, out var rook))
         {
             return false;
         }
@@ -120,12 +106,7 @@ internal static class CastlingRules
             }
         }
 
-        plan =
-            candidate with
-            {
-                King = king,
-                Rook = rook
-            };
+        plan = candidate with { King = king, Rook = rook };
 
         return true;
     }
@@ -136,32 +117,17 @@ internal static class CastlingRules
     {
         var row = GetHomeRow(side);
 
-        var kingFrom =
-            BoardGeometry.SquareAt(
-                row,
-                4);
+        var kingFrom = BoardGeometry.SquareAt(row, 4);
 
         if (optionId == MoveOptions.CastleKingSide)
         {
-            var kingThrough =
-                BoardGeometry.SquareAt(
-                    row,
-                    5);
+            var kingThrough = BoardGeometry.SquareAt(row, 5);
 
-            var kingTo =
-                BoardGeometry.SquareAt(
-                    row,
-                    6);
+            var kingTo = BoardGeometry.SquareAt(row, 6);
 
-            var rookFrom =
-                BoardGeometry.SquareAt(
-                    row,
-                    7);
+            var rookFrom = BoardGeometry.SquareAt(row, 7);
 
-            var rookTo =
-                BoardGeometry.SquareAt(
-                    row,
-                    5);
+            var rookTo = BoardGeometry.SquareAt(row, 5);
 
             return new CastlingPlan(
                 kingFrom,
@@ -169,33 +135,18 @@ internal static class CastlingRules
                 kingTo,
                 rookFrom,
                 rookTo,
-                [
-                    kingThrough,
-                    kingTo
-                ]);
+                [kingThrough, kingTo]);
         }
 
         if (optionId == MoveOptions.CastleQueenSide)
         {
-            var kingThrough =
-                BoardGeometry.SquareAt(
-                    row,
-                    3);
+            var kingThrough = BoardGeometry.SquareAt(row, 3);
 
-            var kingTo =
-                BoardGeometry.SquareAt(
-                    row,
-                    2);
+            var kingTo = BoardGeometry.SquareAt(row, 2);
 
-            var rookFrom =
-                BoardGeometry.SquareAt(
-                    row,
-                    0);
+            var rookFrom = BoardGeometry.SquareAt(row, 0);
 
-            var rookTo =
-                BoardGeometry.SquareAt(
-                    row,
-                    3);
+            var rookTo = BoardGeometry.SquareAt(row, 3);
 
             return new CastlingPlan(
                 kingFrom,
@@ -203,13 +154,7 @@ internal static class CastlingRules
                 kingTo,
                 rookFrom,
                 rookTo,
-                [
-                    BoardGeometry.SquareAt(
-                        row,
-                        1),
-                    kingTo,
-                    kingThrough
-                ]);
+                [BoardGeometry.SquareAt(row, 1), kingTo, kingThrough]);
         }
 
         throw new ArgumentException(
@@ -236,14 +181,11 @@ internal static class CastlingRules
         return false;
     }
 
-    private static IEnumerable<MoveOptionId>
-        GetOptions()
+    private static IEnumerable<MoveOptionId> GetOptions()
     {
-        yield return
-            MoveOptions.CastleKingSide;
+        yield return MoveOptions.CastleKingSide;
 
-        yield return
-            MoveOptions.CastleQueenSide;
+        yield return MoveOptions.CastleQueenSide;
     }
 
     private static int GetHomeRow(

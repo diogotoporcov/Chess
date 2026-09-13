@@ -28,12 +28,9 @@ public sealed class GameViewModel : ViewModelBase
     public string ModeName => _game.Variant.Name;
 
     public string CurrentTurn =>
-        _mode.Presentation.GetSideName(
-            _game.State.CurrentSide);
+        _mode.Presentation.GetSideName(_game.State.CurrentSide);
 
-    public string Status =>
-        _mode.Presentation.GetStatusName(
-            _game.Status.Id);
+    public string Status => _mode.Presentation.GetStatusName(_game.Status.Id);
 
     public ICommand SelectSquareCommand { get; }
 
@@ -60,19 +57,16 @@ public sealed class GameViewModel : ViewModelBase
 
     private SquareViewModel[] CreateSquares()
     {
-        var board =
-            _mode.Presentation.Board;
+        var board = _mode.Presentation.Board;
 
         return
         [
-            .. board.Squares
-                .Select(square =>
-                    new SquareViewModel(
-                        square.Square,
-                        square.X,
-                        square.Y,
-                        board.SquareSize,
-                        square.IsLightSquare))
+            .. board.Squares.Select(square => new SquareViewModel(
+                square.Square,
+                square.X,
+                square.Y,
+                board.SquareSize,
+                square.IsLightSquare))
         ];
     }
 
@@ -81,26 +75,18 @@ public sealed class GameViewModel : ViewModelBase
     {
         ArgumentNullException.ThrowIfNull(square);
 
-        if (ReferenceEquals(
-                square,
-                _selectedSquare))
+        if (ReferenceEquals(square, _selectedSquare))
         {
             ClearSelection();
             return;
         }
 
-        var destinationMove =
-            _selectedSquare is null
-                ? null
-                : _selectedMoves
-                    .Where(
-                        candidate =>
-                            candidate.To ==
-                            square.Square)
-                    .Select(
-                        candidate =>
-                            (Move?)candidate)
-                    .FirstOrDefault();
+        var destinationMove = _selectedSquare is null
+            ? null
+            : _selectedMoves
+                .Where(candidate => candidate.To == square.Square)
+                .Select(candidate => (Move?)candidate)
+                .FirstOrDefault();
 
         if (destinationMove is { } selectedMove)
         {
@@ -108,24 +94,16 @@ public sealed class GameViewModel : ViewModelBase
             return;
         }
 
-        if (!_game.BoardState.TryGetPiece(
-                square.Square,
-                out var piece) ||
-            piece.Side !=
-            _game.State.CurrentSide)
+        if (!_game.BoardState.TryGetPiece(square.Square, out var piece) ||
+            piece.Side != _game.State.CurrentSide)
         {
             ClearSelection();
             return;
         }
 
-        _selectedSquare =
-            square;
+        _selectedSquare = square;
 
-        _selectedMoves =
-        [
-            .. _game.GenerateMoves(
-                square.Square)
-        ];
+        _selectedMoves = [.. _game.GenerateMoves(square.Square)];
 
         RefreshSelection();
     }
@@ -138,28 +116,23 @@ public sealed class GameViewModel : ViewModelBase
         ClearSelection();
         RefreshBoard();
 
-        OnPropertyChanged(
-            nameof(CurrentTurn));
+        OnPropertyChanged(nameof(CurrentTurn));
 
-        OnPropertyChanged(
-            nameof(Status));
+        OnPropertyChanged(nameof(Status));
     }
 
     private void RefreshBoard()
     {
         foreach (var square in _squares)
         {
-            if (!_game.BoardState.TryGetPiece(
-                    square.Square,
-                    out var piece))
+            if (!_game.BoardState.TryGetPiece(square.Square, out var piece))
             {
                 square.PieceImageSource = null;
                 continue;
             }
 
             square.PieceImageSource =
-                _mode.Presentation.GetPieceImageSource(
-                    piece);
+                _mode.Presentation.GetPieceImageSource(piece);
         }
     }
 
@@ -173,34 +146,22 @@ public sealed class GameViewModel : ViewModelBase
 
     private void RefreshSelection()
     {
-        var legalDestinations =
-            _selectedMoves
-                .Select(candidate => candidate.To)
-                .ToHashSet();
+        var legalDestinations = _selectedMoves
+            .Select(candidate => candidate.To)
+            .ToHashSet();
 
         foreach (var square in _squares)
         {
-            square.IsSelected =
-                ReferenceEquals(
-                    square,
-                    _selectedSquare);
+            square.IsSelected = ReferenceEquals(square, _selectedSquare);
 
-            var isLegalDestination =
-                legalDestinations.Contains(
-                    square.Square);
+            var isLegalDestination = legalDestinations.Contains(square.Square);
 
-            var isOccupied =
-                isLegalDestination &&
-                _game.BoardState.IsOccupied(
-                    square.Square);
+            var isOccupied = isLegalDestination &&
+                             _game.BoardState.IsOccupied(square.Square);
 
-            square.IsLegalDestination =
-                isLegalDestination &&
-                !isOccupied;
+            square.IsLegalDestination = isLegalDestination && !isOccupied;
 
-            square.IsCaptureDestination =
-                isLegalDestination &&
-                isOccupied;
+            square.IsCaptureDestination = isLegalDestination && isOccupied;
         }
     }
 }

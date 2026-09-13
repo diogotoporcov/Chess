@@ -8,10 +8,7 @@ public static class AppComposition
 {
     public static ShellViewModel CreateShell()
     {
-        IGameModeProvider[] providers =
-        [
-            new StandardGameModeProvider()
-        ];
+        IGameModeProvider[] providers = [new StandardGameModeProvider()];
 
         var catalog = new GameModeCatalog(providers);
 
