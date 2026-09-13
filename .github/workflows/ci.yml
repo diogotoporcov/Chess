@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          global-json-file: global.json
+
+      - name: Display .NET information
+        run: dotnet --info
+
+      - name: Restore local tools
+        run: dotnet tool restore
+
+      - name: Restore
+        run: dotnet restore Chess.slnx
+
+      - name: Build
+        run: dotnet build Chess.slnx --configuration Release --no-restore
+
+      - name: Test with coverage
+        run: |
+          dotnet test --solution Chess.slnx `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            --coverage `
+            --coverage-output-format cobertura `
+            --coverage-settings coverage.runsettings `
+            --results-directory TestResults `
+            --report-gh `
+            --report-gh-step-summary on `
+            --report-gh-step-summary-sections all `
+            --report-gh-failure-details on
+
+      - name: Generate detailed coverage report
+        if: ${{ always() }}
+        id: coverage_report
+        shell: pwsh
+        run: |
+          $coverageFiles = @(
+            Get-ChildItem -Path TestResults -Recurse -Filter '*.cobertura.xml' -File `
+              -ErrorAction SilentlyContinue
+          )
+
+          if ($coverageFiles.Count -eq 0) {
+            Write-Host 'No Cobertura files were produced; skipping report generation.'
+            'available=false' >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+
+          $reports = $coverageFiles.FullName -join ';'
+          dotnet reportgenerator `
+            "-reports:$reports" `
+            "-targetdir:CoverageReport" `
+            '-reporttypes:Html;Cobertura'
+
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+          'available=true' >> $env:GITHUB_OUTPUT
+
+      - name: Upload coverage report
+        if: ${{ always() && steps.coverage_report.outputs.available == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: coverage-report
+          path: CoverageReport/
+          if-no-files-found: error
+          retention-days: 14
