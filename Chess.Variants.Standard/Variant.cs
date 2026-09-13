@@ -35,6 +35,9 @@ public static class Variant
     public static StandardPositionFactsEvaluator PositionFactsEvaluator =>
         Components.FactsEvaluator;
 
+    public static StandardRepetitionEvaluator RepetitionEvaluator =>
+        Components.Repetition;
+
     public static Game CreateGame()
     {
         return Definition.CreateGame();
@@ -81,9 +84,15 @@ public static class Variant
             statusEvaluator,
             CreateInitialPlacements());
 
+        var factsEvaluator = new StandardPositionFactsEvaluator(
+            legalMoveGenerator);
+
         return new VariantComponents(
             definition,
-            new StandardPositionFactsEvaluator(legalMoveGenerator));
+            factsEvaluator,
+            new StandardRepetitionEvaluator(
+                factsEvaluator,
+                definition.CreateGame));
     }
 
     private static InitialPiecePlacement[] CreateInitialPlacements()
@@ -141,5 +150,6 @@ public static class Variant
 
     private sealed record VariantComponents(
         GameVariantDefinition VariantDefinition,
-        StandardPositionFactsEvaluator FactsEvaluator);
+        StandardPositionFactsEvaluator FactsEvaluator,
+        StandardRepetitionEvaluator Repetition);
 }
