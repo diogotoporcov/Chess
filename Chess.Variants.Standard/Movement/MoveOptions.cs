@@ -1,4 +1,7 @@
-﻿using Chess.Core.Movement;
+﻿// SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+using Chess.Core.Movement;
 
 namespace Chess.Variants.Standard.Movement;
 

@@ -1,4 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿// SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+using System.Diagnostics.CodeAnalysis;
 using Chess.Core.Board.Topology;
 using Chess.Core.Board.Transitions;
 using Chess.Core.Pieces;

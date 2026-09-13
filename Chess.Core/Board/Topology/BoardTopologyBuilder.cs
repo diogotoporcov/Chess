@@ -1,4 +1,7 @@
-﻿namespace Chess.Core.Board.Topology;
+﻿// SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+namespace Chess.Core.Board.Topology;
 
 public sealed class BoardTopologyBuilder
 {

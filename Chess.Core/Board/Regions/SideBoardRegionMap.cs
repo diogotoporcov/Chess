@@ -1,4 +1,7 @@
-﻿using System.Collections.Frozen;
+﻿// SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+using System.Collections.Frozen;
 using Chess.Core.Sides;
 
 namespace Chess.Core.Board.Regions;

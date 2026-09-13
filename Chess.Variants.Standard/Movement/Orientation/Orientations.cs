@@ -1,5 +1,9 @@
-using Chess.Core.Movement.Orientation;
+// SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 using Chess.Core.Board;
+using Chess.Core.Movement.Orientation;
+using Chess.Variants.Standard.Sides;
 
 namespace Chess.Variants.Standard.Movement.Orientation;
 
@@ -7,44 +11,36 @@ public static class Orientations
 {
     public static IRelativeDirectionResolver Resolver { get; } =
         new SideOrientationMap(
-            (Sides.SideDefinitions.White, StandardRelativeDirections.Forward,
+            (SideDefinitions.White, StandardRelativeDirections.Forward,
                 CompassDirections.North),
-            (Sides.SideDefinitions.White,
-                StandardRelativeDirections.ForwardRight,
+            (SideDefinitions.White, StandardRelativeDirections.ForwardRight,
                 CompassDirections.NorthEast),
-            (Sides.SideDefinitions.White, StandardRelativeDirections.Right,
+            (SideDefinitions.White, StandardRelativeDirections.Right,
                 CompassDirections.East),
-            (Sides.SideDefinitions.White,
-                StandardRelativeDirections.BackwardRight,
+            (SideDefinitions.White, StandardRelativeDirections.BackwardRight,
                 CompassDirections.SouthEast),
-            (Sides.SideDefinitions.White, StandardRelativeDirections.Backward,
+            (SideDefinitions.White, StandardRelativeDirections.Backward,
                 CompassDirections.South),
-            (Sides.SideDefinitions.White,
-                StandardRelativeDirections.BackwardLeft,
+            (SideDefinitions.White, StandardRelativeDirections.BackwardLeft,
                 CompassDirections.SouthWest),
-            (Sides.SideDefinitions.White, StandardRelativeDirections.Left,
+            (SideDefinitions.White, StandardRelativeDirections.Left,
                 CompassDirections.West),
-            (Sides.SideDefinitions.White,
-                StandardRelativeDirections.ForwardLeft,
+            (SideDefinitions.White, StandardRelativeDirections.ForwardLeft,
                 CompassDirections.NorthWest),
-            (Sides.SideDefinitions.Black, StandardRelativeDirections.Forward,
+            (SideDefinitions.Black, StandardRelativeDirections.Forward,
                 CompassDirections.South),
-            (Sides.SideDefinitions.Black,
-                StandardRelativeDirections.ForwardRight,
+            (SideDefinitions.Black, StandardRelativeDirections.ForwardRight,
                 CompassDirections.SouthWest),
-            (Sides.SideDefinitions.Black, StandardRelativeDirections.Right,
+            (SideDefinitions.Black, StandardRelativeDirections.Right,
                 CompassDirections.West),
-            (Sides.SideDefinitions.Black,
-                StandardRelativeDirections.BackwardRight,
+            (SideDefinitions.Black, StandardRelativeDirections.BackwardRight,
                 CompassDirections.NorthWest),
-            (Sides.SideDefinitions.Black, StandardRelativeDirections.Backward,
+            (SideDefinitions.Black, StandardRelativeDirections.Backward,
                 CompassDirections.North),
-            (Sides.SideDefinitions.Black,
-                StandardRelativeDirections.BackwardLeft,
+            (SideDefinitions.Black, StandardRelativeDirections.BackwardLeft,
                 CompassDirections.NorthEast),
-            (Sides.SideDefinitions.Black, StandardRelativeDirections.Left,
+            (SideDefinitions.Black, StandardRelativeDirections.Left,
                 CompassDirections.East),
-            (Sides.SideDefinitions.Black,
-                StandardRelativeDirections.ForwardLeft,
+            (SideDefinitions.Black, StandardRelativeDirections.ForwardLeft,
                 CompassDirections.SouthEast));
 }

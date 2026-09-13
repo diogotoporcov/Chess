@@ -1,10 +1,13 @@
-using Chess.Variants.Standard.Board.Regions;
-using Chess.Core.Pieces;
+// SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 using Chess.Core.Board;
 using Chess.Core.Movement;
 using Chess.Core.Movement.Conditions;
 using Chess.Core.Movement.Orientation;
 using Chess.Core.Movement.Patterns;
+using Chess.Core.Pieces;
+using Chess.Variants.Standard.Board.Regions;
 
 namespace Chess.Variants.Standard.Pieces;
 

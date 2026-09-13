@@ -1,4 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿// SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+using System.Collections.ObjectModel;
 using Chess.Core.Board;
 using Chess.Core.Movement;
 using Chess.Core.Sides;
