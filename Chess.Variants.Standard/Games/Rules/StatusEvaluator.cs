@@ -63,6 +63,13 @@ public sealed class StatusEvaluator : IGameStatusEvaluator
                 winner);
         }
 
+        if (InsufficientMatingMaterialDetector.IsInsufficient(gameState))
+        {
+            return new GameStatus(
+                StatusDefinitions.DeadPosition,
+                isTerminal: true);
+        }
+
         var halfmoveFacts = _halfmoveRuleEvaluator.Evaluate(gameState);
 
         if (halfmoveFacts.IsSeventyFiveMoveThresholdReached)

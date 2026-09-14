@@ -15,6 +15,9 @@ public static class StatusDefinitions
 
     public static GameStatusId Stalemate { get; } = new("chess:stalemate");
 
+    public static GameStatusId DeadPosition { get; } =
+        new("chess:dead-position");
+
     public static GameStatusId FivefoldRepetition { get; } =
         new("chess:fivefold-repetition");
 

@@ -33,6 +33,7 @@ public sealed class CheckAndStatusTests
                 "d4",
                 SideDefinitions.White,
                 PieceDefinitions.King),
+            TestSupport.At("h2", SideDefinitions.White, PieceDefinitions.Pawn),
             TestSupport.At(attackerSquare, SideDefinitions.Black, attacker)
         };
 
