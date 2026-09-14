@@ -163,7 +163,7 @@ public sealed class CheckAndStatusTests
     public void KnownPositionIsStalemateWithoutWinner()
     {
         var game = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("a8", SideDefinitions.Black, PieceDefinitions.King),
             TestSupport.At("c6", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At(
@@ -192,11 +192,17 @@ public sealed class CheckAndStatusTests
             game.State,
             new Side("test:outsider")));
 
-        var missingKing = TestSupport.CreateGame(
-            TestSupport.At("e8", SideDefinitions.Black, PieceDefinitions.King));
+        var missingKing = TestSupport
+            .CreateGameStateFactory(
+                TurnOrderDefinition.Instance,
+                TestSupport.At(
+                    "e8",
+                    SideDefinitions.Black,
+                    PieceDefinitions.King))
+            .Create();
 
         Assert.Throws<InvalidOperationException>(() =>
-            detector.IsInCheck(missingKing.State, SideDefinitions.White));
+            detector.IsInCheck(missingKing, SideDefinitions.White));
     }
 
     internal static Game CreateFoolsMate()

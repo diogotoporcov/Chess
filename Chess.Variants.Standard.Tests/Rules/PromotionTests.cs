@@ -16,7 +16,7 @@ public sealed class PromotionTests
     public void BlackCapturingUnderpromotionAndUndoRestoreExactState()
     {
         var game = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("e1", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At("e8", SideDefinitions.Black, PieceDefinitions.King),
             TestSupport.At("a2", SideDefinitions.Black, PieceDefinitions.Pawn),

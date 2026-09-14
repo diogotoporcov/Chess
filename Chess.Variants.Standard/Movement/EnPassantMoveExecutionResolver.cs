@@ -4,12 +4,23 @@
 using Chess.Core.Board.Transitions;
 using Chess.Core.Games;
 using Chess.Core.Movement;
+using Chess.Variants.Standard.Games;
 using Chess.Variants.Standard.Games.Rules;
 
 namespace Chess.Variants.Standard.Movement;
 
 public sealed class EnPassantMoveExecutionResolver : IMoveExecutionResolver
 {
+    private readonly StandardEnPassantTargetEvaluator _targetEvaluator;
+
+    public EnPassantMoveExecutionResolver(
+        StandardEnPassantTargetEvaluator targetEvaluator)
+    {
+        ArgumentNullException.ThrowIfNull(targetEvaluator);
+
+        _targetEvaluator = targetEvaluator;
+    }
+
     public bool CanResolve(
         Move move)
     {
@@ -29,6 +40,7 @@ public sealed class EnPassantMoveExecutionResolver : IMoveExecutionResolver
         }
 
         if (!EnPassantRules.TryGetCapturedPawn(
+                _targetEvaluator,
                 gameState,
                 move,
                 out var capturedPawnSquare,

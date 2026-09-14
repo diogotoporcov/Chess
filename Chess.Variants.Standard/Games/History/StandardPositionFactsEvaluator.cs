@@ -4,6 +4,7 @@
 using Chess.Core.Board;
 using Chess.Core.Games;
 using Chess.Variants.Standard.Movement;
+using Chess.Variants.Standard.Sides;
 
 namespace Chess.Variants.Standard.Games.History;
 
@@ -11,12 +12,37 @@ public sealed class StandardPositionFactsEvaluator
 {
     private readonly IGameMoveGenerator _legalMoveGenerator;
 
+    private readonly CastlingRightsEvaluator _castlingRightsEvaluator;
+
+    private readonly StandardEnPassantTargetEvaluator _enPassantTargetEvaluator;
+
+    private readonly int _initialHalfmoveClock;
+
+    private readonly int _initialFullmoveNumber;
+
     public StandardPositionFactsEvaluator(
-        IGameMoveGenerator legalMoveGenerator)
+        IGameMoveGenerator legalMoveGenerator,
+        CastlingRightsEvaluator castlingRightsEvaluator,
+        StandardEnPassantTargetEvaluator enPassantTargetEvaluator,
+        int initialHalfmoveClock,
+        int initialFullmoveNumber)
     {
         ArgumentNullException.ThrowIfNull(legalMoveGenerator);
+        ArgumentNullException.ThrowIfNull(castlingRightsEvaluator);
+        ArgumentNullException.ThrowIfNull(enPassantTargetEvaluator);
+        ArgumentOutOfRangeException.ThrowIfNegative(initialHalfmoveClock);
+
+        if (initialFullmoveNumber < 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(initialFullmoveNumber));
+        }
 
         _legalMoveGenerator = legalMoveGenerator;
+        _castlingRightsEvaluator = castlingRightsEvaluator;
+        _enPassantTargetEvaluator = enPassantTargetEvaluator;
+        _initialHalfmoveClock = initialHalfmoveClock;
+        _initialFullmoveNumber = initialFullmoveNumber;
     }
 
     public StandardPositionFacts Evaluate(
@@ -26,7 +52,9 @@ public sealed class StandardPositionFactsEvaluator
 
         return new StandardPositionFacts(
             CreatePositionKey(gameState),
-            EvaluateHalfmoveClock(gameState));
+            _enPassantTargetEvaluator.Evaluate(gameState),
+            EvaluateHalfmoveClock(gameState),
+            EvaluateFullmoveNumber(gameState));
     }
 
     public StandardPositionKey CreatePositionKey(
@@ -34,7 +62,7 @@ public sealed class StandardPositionFactsEvaluator
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        var castlingRights = CastlingRightsEvaluator.Evaluate(gameState);
+        var castlingRights = _castlingRightsEvaluator.Evaluate(gameState);
         var effectiveEnPassantTarget =
             EvaluateEffectiveEnPassantTarget(gameState);
 
@@ -50,7 +78,7 @@ public sealed class StandardPositionFactsEvaluator
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        var halfmoveClock = 0;
+        var quietHalfmoves = 0;
 
         for (var index = gameState.History.Count - 1; index >= 0; index--)
         {
@@ -58,13 +86,24 @@ public sealed class StandardPositionFactsEvaluator
 
             if (StandardHalfmoveRules.ResetsClock(execution))
             {
-                break;
+                return quietHalfmoves;
             }
 
-            halfmoveClock++;
+            quietHalfmoves++;
         }
 
-        return halfmoveClock;
+        return checked(_initialHalfmoveClock + quietHalfmoves);
+    }
+
+    public int EvaluateFullmoveNumber(
+        GameState gameState)
+    {
+        ArgumentNullException.ThrowIfNull(gameState);
+
+        var blackMoves = gameState.History.Count(record =>
+            record.Side == SideDefinitions.Black);
+
+        return checked(_initialFullmoveNumber + blackMoves);
     }
 
     private static IReadOnlyList<StandardPiecePlacement>

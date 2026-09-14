@@ -19,10 +19,12 @@ public sealed class ExecutionResolverContractTests
         var state = Variant.CreateGame()
             .State;
 
-        Assert.Throws<InvalidOperationException>(() =>
-            new CastlingMoveExecutionResolver().Resolve(state, ordinary));
-        Assert.Throws<InvalidOperationException>(() =>
-            new EnPassantMoveExecutionResolver().Resolve(state, ordinary));
+        Assert.Throws<InvalidOperationException>(() => TestSupport
+            .CreateCastlingMoveExecutionResolver()
+            .Resolve(state, ordinary));
+        Assert.Throws<InvalidOperationException>(() => TestSupport
+            .CreateEnPassantMoveExecutionResolver()
+            .Resolve(state, ordinary));
         Assert.Throws<InvalidOperationException>(() =>
             new PromotionMoveExecutionResolver().Resolve(state, ordinary));
     }
@@ -37,8 +39,9 @@ public sealed class ExecutionResolverContractTests
             TestSupport.Square("g1"),
             MoveOptions.CastleKingSide);
 
-        Assert.Throws<InvalidOperationException>(() =>
-            new CastlingMoveExecutionResolver().Resolve(state, move));
+        Assert.Throws<InvalidOperationException>(() => TestSupport
+            .CreateCastlingMoveExecutionResolver()
+            .Resolve(state, move));
     }
 
     [Fact]
@@ -54,8 +57,9 @@ public sealed class ExecutionResolverContractTests
             TestSupport.Square("d6"),
             MoveOptions.EnPassant);
 
-        Assert.Throws<InvalidOperationException>(() =>
-            new EnPassantMoveExecutionResolver().Resolve(game.State, move));
+        Assert.Throws<InvalidOperationException>(() => TestSupport
+            .CreateEnPassantMoveExecutionResolver()
+            .Resolve(game.State, move));
     }
 
     [Theory]

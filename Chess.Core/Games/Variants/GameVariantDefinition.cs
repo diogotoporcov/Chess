@@ -6,6 +6,7 @@ using Chess.Core.Board.Topology;
 using Chess.Core.Games.Status;
 using Chess.Core.Movement;
 using Chess.Core.Movement.Orientation;
+using Chess.Core.Sides;
 
 namespace Chess.Core.Games.Variants;
 
@@ -26,6 +27,8 @@ public sealed class GameVariantDefinition
     public BoardTopology Topology => _gameStateFactory.Topology;
 
     public TurnOrder TurnOrder => _gameStateFactory.TurnOrder;
+
+    public Side InitialSide => _gameStateFactory.InitialSide;
 
     public IReadOnlyList<InitialPiecePlacement> InitialPlacements =>
         _gameStateFactory.InitialPlacements;

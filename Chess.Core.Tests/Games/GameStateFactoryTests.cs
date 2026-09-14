@@ -112,6 +112,43 @@ public sealed class GameStateFactoryTests
     }
 
     [Fact]
+    public void ExplicitInitialSideUsesCanonicalTurnOrderAcrossMoveAndUndo()
+    {
+        var topology = TestSupport.CreateGrid(1, 2);
+        var turnOrder = new TurnOrder(TestSupport.White, TestSupport.Black);
+        var from = TestSupport.At(0, 0, 2);
+        var to = TestSupport.At(0, 1, 2);
+        var move = new Move(from, to);
+        var factory = new GameStateFactory(
+            topology,
+            turnOrder,
+            TestSupport.Black,
+            new ThrowingOrientationResolver(),
+            new EmptyRegionResolver(),
+            new InitialPiecePlacement(
+                from,
+                TestSupport.Black,
+                TestSupport.Token));
+        var state = factory.Create();
+        var executor = new GameMoveExecutor(
+            new GameMoveResolver(
+                new FixedMoveGenerator(move),
+                new BasicMoveExecutionResolver()));
+
+        Assert.Equal([TestSupport.White, TestSupport.Black], turnOrder.Sides);
+        Assert.Same(TestSupport.Black, factory.InitialSide);
+        Assert.Same(TestSupport.Black, state.CurrentSide);
+
+        executor.Execute(state, move);
+
+        Assert.Same(TestSupport.White, state.CurrentSide);
+
+        executor.UndoLastMove(state);
+
+        Assert.Same(TestSupport.Black, state.CurrentSide);
+    }
+
+    [Fact]
     public void ConstructorRejectsInvalidPlacements()
     {
         var topology = TestSupport.CreateGrid(1, 1);
@@ -183,6 +220,27 @@ public sealed class GameStateFactoryTests
             orientationResolver,
             regionResolver,
             null!));
+    }
+
+    [Fact]
+    public void ExplicitInitialSideMustBelongToTurnOrder()
+    {
+        var topology = TestSupport.CreateGrid(1, 1);
+        var turnOrder = new TurnOrder(TestSupport.White, TestSupport.Black);
+
+        Assert.Throws<ArgumentException>(() => new GameStateFactory(
+            topology,
+            turnOrder,
+            new Side("test:outsider"),
+            new ThrowingOrientationResolver(),
+            new EmptyRegionResolver()));
+
+        var state = TestSupport.CreateState(topology, turnOrder);
+
+        Assert.Throws<ArgumentException>(() => new GameState(
+            state.MovementContext,
+            turnOrder,
+            new Side("test:outsider")));
     }
 
     [Fact]

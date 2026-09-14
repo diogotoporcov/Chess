@@ -5,8 +5,6 @@ using Chess.Core.Games;
 using Chess.Core.Games.Attacks;
 using Chess.Core.Games.Variants;
 using Chess.Core.Movement;
-using Chess.Core.Sides;
-using Chess.Variants.Standard.Board;
 using Chess.Variants.Standard.Board.Regions;
 using Chess.Variants.Standard.Board.Topology;
 using Chess.Variants.Standard.Games;
@@ -14,31 +12,29 @@ using Chess.Variants.Standard.Games.History;
 using Chess.Variants.Standard.Games.Rules;
 using Chess.Variants.Standard.Movement;
 using Chess.Variants.Standard.Movement.Orientation;
-using Chess.Variants.Standard.Pieces;
-using Chess.Variants.Standard.Sides;
 
 namespace Chess.Variants.Standard;
 
 public static class Variant
 {
-    private const int BlackBackRankRow = 0;
-    private const int BlackPawnRow = 1;
+    private static readonly VariantComponents Components =
+        CreateComponents(StandardInitialState.Default);
 
-    private const int WhitePawnRow = 6;
-    private const int WhiteBackRankRow = 7;
-
-    private static readonly VariantComponents Components = CreateComponents();
+    public static StandardInitialState DefaultInitialState =>
+        StandardInitialState.Default;
 
     public static GameVariantDefinition Definition =>
         Components.VariantDefinition;
 
-    public static StandardPositionFactsEvaluator PositionFactsEvaluator =>
+    internal static StandardPositionFactsEvaluator
+        DefaultPositionFactsEvaluator =>
         Components.FactsEvaluator;
 
-    public static StandardRepetitionEvaluator RepetitionEvaluator =>
+    internal static StandardRepetitionEvaluator DefaultRepetitionEvaluator =>
         Components.Repetition;
 
-    public static StandardHalfmoveRuleEvaluator HalfmoveRuleEvaluator =>
+    internal static StandardHalfmoveRuleEvaluator
+        DefaultHalfmoveRuleEvaluator =>
         Components.HalfmoveRules;
 
     public static Game CreateGame()
@@ -46,20 +42,37 @@ public static class Variant
         return Definition.CreateGame();
     }
 
-    private static VariantComponents CreateComponents()
+    public static Game CreateGame(
+        StandardInitialState initialState)
+    {
+        ArgumentNullException.ThrowIfNull(initialState);
+
+        return CreateComponents(initialState)
+            .VariantDefinition
+            .CreateGame();
+    }
+
+    private static VariantComponents CreateComponents(
+        StandardInitialState initialState)
     {
         var gameStateFactory = new GameStateFactory(
             BoardTopologyFactory.Create(),
             TurnOrderDefinition.Instance,
+            initialState.SideToMove,
             Orientations.Resolver,
             BoardRegions.Resolver,
-            CreateInitialPlacements());
+            [.. initialState.Placements]);
+
+        var castlingRightsEvaluator = new CastlingRightsEvaluator(
+            initialState.CastlingRights);
+        var enPassantTargetEvaluator =
+            new StandardEnPassantTargetEvaluator(initialState.EnPassantTarget);
 
         var executionResolver = new CompositeMoveExecutionResolver(
             new BasicMoveExecutionResolver(),
             new PromotionMoveExecutionResolver(),
-            new EnPassantMoveExecutionResolver(),
-            new CastlingMoveExecutionResolver());
+            new EnPassantMoveExecutionResolver(enPassantTargetEvaluator),
+            new CastlingMoveExecutionResolver(castlingRightsEvaluator));
 
         var moveSimulator = new GameMoveSimulator(executionResolver);
 
@@ -69,9 +82,11 @@ public static class Variant
 
         var pseudoLegalMoveGenerator = new CastlingMoveGenerator(
             new EnPassantMoveGenerator(
-                new PromotionMoveGenerator(new PseudoLegalGameMoveGenerator())),
+                new PromotionMoveGenerator(new PseudoLegalGameMoveGenerator()),
+                enPassantTargetEvaluator),
             moveSimulator,
-            checkDetector);
+            checkDetector,
+            castlingRightsEvaluator);
 
         var legalMoveGenerator = new LegalMoveGenerator(
             pseudoLegalMoveGenerator,
@@ -85,7 +100,11 @@ public static class Variant
         var moveExecutor = new GameMoveExecutor(moveResolver);
 
         var factsEvaluator = new StandardPositionFactsEvaluator(
-            legalMoveGenerator);
+            legalMoveGenerator,
+            castlingRightsEvaluator,
+            enPassantTargetEvaluator,
+            initialState.HalfmoveClock,
+            initialState.FullmoveNumber);
 
         var repetitionEvaluator = new StandardRepetitionEvaluator(
             factsEvaluator,
@@ -115,59 +134,6 @@ public static class Variant
             factsEvaluator,
             repetitionEvaluator,
             halfmoveRuleEvaluator);
-    }
-
-    private static InitialPiecePlacement[] CreateInitialPlacements()
-    {
-        var placements = new List<InitialPiecePlacement>();
-
-        AddPawns(placements, SideDefinitions.Black, BlackPawnRow);
-
-        AddPawns(placements, SideDefinitions.White, WhitePawnRow);
-
-        AddBackRank(placements, SideDefinitions.Black, BlackBackRankRow);
-
-        AddBackRank(placements, SideDefinitions.White, WhiteBackRankRow);
-
-        return [.. placements];
-    }
-
-    private static void AddPawns(
-        ICollection<InitialPiecePlacement> placements,
-        Side side,
-        int row)
-    {
-        for (var column = 0; column < BoardGeometry.SideDimension; column++)
-        {
-            placements.Add(
-                new InitialPiecePlacement(
-                    BoardGeometry.SquareAt(row, column),
-                    side,
-                    PieceDefinitions.Pawn));
-        }
-    }
-
-    private static void AddBackRank(
-        ICollection<InitialPiecePlacement> placements,
-        Side side,
-        int row)
-    {
-        var definitions = new[]
-        {
-            PieceDefinitions.Rook, PieceDefinitions.Knight,
-            PieceDefinitions.Bishop, PieceDefinitions.Queen,
-            PieceDefinitions.King, PieceDefinitions.Bishop,
-            PieceDefinitions.Knight, PieceDefinitions.Rook
-        };
-
-        for (var column = 0; column < definitions.Length; column++)
-        {
-            placements.Add(
-                new InitialPiecePlacement(
-                    BoardGeometry.SquareAt(row, column),
-                    side,
-                    definitions[column]));
-        }
     }
 
     private sealed record VariantComponents(

@@ -29,16 +29,40 @@ public sealed class GameState
 
     public GameState(
         MovementContext movementContext,
+        TurnOrder turnOrder) : this(
+        movementContext,
+        turnOrder,
+        GetFirstSide(turnOrder))
+    {
+    }
+
+    private static Side GetFirstSide(
         TurnOrder turnOrder)
     {
-        ArgumentNullException.ThrowIfNull(movementContext);
-
         ArgumentNullException.ThrowIfNull(turnOrder);
+
+        return turnOrder.First;
+    }
+
+    public GameState(
+        MovementContext movementContext,
+        TurnOrder turnOrder,
+        Side currentSide)
+    {
+        ArgumentNullException.ThrowIfNull(movementContext);
+        ArgumentNullException.ThrowIfNull(turnOrder);
+        ArgumentNullException.ThrowIfNull(currentSide);
+
+        if (!turnOrder.Contains(currentSide))
+        {
+            throw new ArgumentException(
+                "Current side must be part of the turn order.",
+                nameof(currentSide));
+        }
 
         MovementContext = movementContext;
         TurnOrder = turnOrder;
-
-        CurrentSide = turnOrder.First;
+        CurrentSide = currentSide;
 
         _historyView = _history.AsReadOnly();
     }

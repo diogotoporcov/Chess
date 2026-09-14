@@ -4,6 +4,7 @@
 using Chess.Core.Board;
 using Chess.Core.Games;
 using Chess.Core.Movement;
+using Chess.Variants.Standard.Games.History;
 using Chess.Variants.Standard.Games.Rules;
 
 namespace Chess.Variants.Standard.Games;
@@ -16,22 +17,27 @@ public sealed class CastlingMoveGenerator : IGameMoveGenerator
 
     private readonly CheckDetector _checkDetector;
 
+    private readonly CastlingRightsEvaluator _castlingRightsEvaluator;
+
     public CastlingMoveGenerator(
         IGameMoveGenerator innerMoveGenerator,
         GameMoveSimulator moveSimulator,
-        CheckDetector checkDetector)
+        CheckDetector checkDetector,
+        CastlingRightsEvaluator castlingRightsEvaluator)
     {
         ArgumentNullException.ThrowIfNull(innerMoveGenerator);
 
         ArgumentNullException.ThrowIfNull(moveSimulator);
 
         ArgumentNullException.ThrowIfNull(checkDetector);
+        ArgumentNullException.ThrowIfNull(castlingRightsEvaluator);
 
         _innerMoveGenerator = innerMoveGenerator;
 
         _moveSimulator = moveSimulator;
 
         _checkDetector = checkDetector;
+        _castlingRightsEvaluator = castlingRightsEvaluator;
     }
 
     public IEnumerable<Move> GenerateMoves(
@@ -55,9 +61,13 @@ public sealed class CastlingMoveGenerator : IGameMoveGenerator
             yield break;
         }
 
-        foreach (var move in CastlingRules.GenerateCandidates(gameState, from))
+        foreach (var move in CastlingRules.GenerateCandidates(
+                     _castlingRightsEvaluator,
+                     gameState,
+                     from))
         {
             if (!CastlingRules.TryValidateStructure(
+                    _castlingRightsEvaluator,
                     gameState,
                     move,
                     out var plan))

@@ -11,9 +11,17 @@ using Chess.Variants.Standard.Sides;
 
 namespace Chess.Variants.Standard.Games.History;
 
-public static class CastlingRightsEvaluator
+public sealed class CastlingRightsEvaluator
 {
-    public static CastlingRights Evaluate(
+    private readonly CastlingRights _initialRights;
+
+    public CastlingRightsEvaluator(
+        CastlingRights initialRights)
+    {
+        _initialRights = initialRights;
+    }
+
+    public CastlingRights Evaluate(
         GameState gameState)
     {
         ArgumentNullException.ThrowIfNull(gameState);
@@ -25,13 +33,18 @@ public static class CastlingRightsEvaluator
             HasRight(gameState, SideDefinitions.Black, kingSide: false));
     }
 
-    internal static bool HasRight(
+    internal bool HasRight(
         GameState gameState,
         Side side,
         bool kingSide)
     {
         ArgumentNullException.ThrowIfNull(gameState);
         ArgumentNullException.ThrowIfNull(side);
+
+        if (!HasInitialRight(side, kingSide))
+        {
+            return false;
+        }
 
         var homeRow = GetHomeRow(side);
         var kingSquare = BoardGeometry.SquareAt(homeRow, 4);
@@ -49,6 +62,28 @@ public static class CastlingRightsEvaluator
                    PieceDefinitions.Rook);
     }
 
+    private bool HasInitialRight(
+        Side side,
+        bool kingSide)
+    {
+        if (side == SideDefinitions.White)
+        {
+            return kingSide
+                ? _initialRights.WhiteKingSide
+                : _initialRights.WhiteQueenSide;
+        }
+
+        if (side == SideDefinitions.Black)
+        {
+            return kingSide
+                ? _initialRights.BlackKingSide
+                : _initialRights.BlackQueenSide;
+        }
+
+        throw new InvalidOperationException(
+            $"Unsupported side '{side}' for standard chess.");
+    }
+
     private static bool HasUnmovedPiece(
         GameState gameState,
         Square square,
@@ -57,7 +92,7 @@ public static class CastlingRightsEvaluator
     {
         return gameState.BoardState.TryGetPiece(square, out var piece) &&
                piece.Side == side &&
-               piece.Definition.Id == definition.Id &&
+               ReferenceEquals(piece.Definition, definition) &&
                !HasMoved(gameState, piece);
     }
 

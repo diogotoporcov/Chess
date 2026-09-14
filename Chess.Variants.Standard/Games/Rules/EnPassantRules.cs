@@ -7,7 +7,6 @@ using Chess.Core.Games;
 using Chess.Core.Movement;
 using Chess.Core.Pieces;
 using Chess.Core.Sides;
-using Chess.Variants.Standard.Board.Regions;
 using Chess.Variants.Standard.Movement;
 using Chess.Variants.Standard.Pieces;
 using Chess.Variants.Standard.Sides;
@@ -17,9 +16,11 @@ namespace Chess.Variants.Standard.Games.Rules;
 internal static class EnPassantRules
 {
     public static IEnumerable<Move> GenerateMoves(
+        StandardEnPassantTargetEvaluator targetEvaluator,
         GameState gameState,
         Square from)
     {
+        ArgumentNullException.ThrowIfNull(targetEvaluator);
         ArgumentNullException.ThrowIfNull(gameState);
 
         if (!gameState.BoardState.TryGetPiece(from, out var pawn))
@@ -46,7 +47,12 @@ internal static class EnPassantRules
 
             var move = new Move(from, destination, MoveOptions.EnPassant);
 
-            if (TryGetCapturedPawn(gameState, move, out _, out _))
+            if (TryGetCapturedPawn(
+                    targetEvaluator,
+                    gameState,
+                    move,
+                    out _,
+                    out _))
             {
                 yield return move;
             }
@@ -54,11 +60,13 @@ internal static class EnPassantRules
     }
 
     public static bool TryGetCapturedPawn(
+        StandardEnPassantTargetEvaluator targetEvaluator,
         GameState gameState,
         Move move,
         out Square capturedPawnSquare,
         [NotNullWhen(true)] out Piece? capturedPawn)
     {
+        ArgumentNullException.ThrowIfNull(targetEvaluator);
         ArgumentNullException.ThrowIfNull(gameState);
 
         capturedPawnSquare = default;
@@ -76,12 +84,18 @@ internal static class EnPassantRules
             return false;
         }
 
-        if (movingPawn.Definition.Id != PieceDefinitions.Pawn.Id)
+        if (movingPawn.Side != gameState.CurrentSide ||
+            !ReferenceEquals(movingPawn.Definition, PieceDefinitions.Pawn))
         {
             return false;
         }
 
         if (boardState.IsOccupied(move.To))
+        {
+            return false;
+        }
+
+        if (targetEvaluator.Evaluate(gameState) != move.To)
         {
             return false;
         }
@@ -102,16 +116,7 @@ internal static class EnPassantRules
         }
 
         if (capturedPawn.Side == movingPawn.Side ||
-            capturedPawn.Definition.Id != PieceDefinitions.Pawn.Id)
-        {
-            capturedPawn = null;
-            return false;
-        }
-
-        if (!WasLastMoveDoublePawnAdvance(
-                gameState,
-                capturedPawnSquare,
-                capturedPawn))
+            !ReferenceEquals(capturedPawn.Definition, PieceDefinitions.Pawn))
         {
             capturedPawn = null;
             return false;
@@ -157,84 +162,6 @@ internal static class EnPassantRules
         return false;
     }
 
-    private static bool WasLastMoveDoublePawnAdvance(
-        GameState gameState,
-        Square currentSquare,
-        Piece pawn)
-    {
-        var lastMove = gameState.LastMove;
-
-        if (lastMove is null)
-        {
-            return false;
-        }
-
-        if (lastMove.Side != pawn.Side)
-        {
-            return false;
-        }
-
-        var move = lastMove.Execution.Move;
-
-        if (move.OptionId is not null ||
-            move.To != currentSquare)
-        {
-            return false;
-        }
-
-        if (!gameState.MovementContext.IsInRegion(
-                pawn.Side,
-                BoardRegions.PawnStarting,
-                move.From))
-        {
-            return false;
-        }
-
-        var forwardDirection = GetForwardDirection(pawn.Side);
-
-        var topology = gameState.BoardState.Topology;
-
-        if (!topology.TryGetNext(
-                move.From,
-                forwardDirection,
-                out var intermediateSquare))
-        {
-            return false;
-        }
-
-        if (!topology.TryGetNext(
-                intermediateSquare,
-                forwardDirection,
-                out var expectedDestination))
-        {
-            return false;
-        }
-
-        if (expectedDestination != currentSquare)
-        {
-            return false;
-        }
-
-        var originChange =
-            lastMove.Execution.Transition.Changes.SingleOrDefault(change =>
-                change.Square == move.From);
-
-        var destinationChange =
-            lastMove.Execution.Transition.Changes.SingleOrDefault(change =>
-                change.Square == move.To);
-
-        if (originChange is null ||
-            destinationChange is null)
-        {
-            return false;
-        }
-
-        return ReferenceEquals(originChange.Before, pawn) &&
-               originChange.After is null &&
-               destinationChange.Before is null &&
-               ReferenceEquals(destinationChange.After, pawn);
-    }
-
     private static IEnumerable<Direction> GetDestinationDirections(
         Side side)
     {
@@ -276,23 +203,6 @@ internal static class EnPassantRules
             yield return (CompassDirections.East, CompassDirections.SouthEast);
 
             yield break;
-        }
-
-        throw new InvalidOperationException(
-            $"Unsupported side '{side}' for standard chess.");
-    }
-
-    private static Direction GetForwardDirection(
-        Side side)
-    {
-        if (side == SideDefinitions.White)
-        {
-            return CompassDirections.North;
-        }
-
-        if (side == SideDefinitions.Black)
-        {
-            return CompassDirections.South;
         }
 
         throw new InvalidOperationException(

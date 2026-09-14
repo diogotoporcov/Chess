@@ -119,7 +119,7 @@ public sealed class StandardRepetitionEvaluatorTests
                 .CurrentPositionOccurrences);
         Assert.Equal(
             TestSupport.Square("d6"),
-            Variant.PositionFactsEvaluator.CreatePositionKey(game.State)
+            Variant.DefaultPositionFactsEvaluator.CreatePositionKey(game.State)
                 .EffectiveEnPassantTarget);
     }
 
@@ -127,7 +127,7 @@ public sealed class StandardRepetitionEvaluatorTests
     public void PinnedEnPassantDoesNotParticipateInReconstructedPositionKey()
     {
         var definition = TestSupport.CreateDefinition(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("e1", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At("e5", SideDefinitions.White, PieceDefinitions.Pawn),
             TestSupport.At("a8", SideDefinitions.Black, PieceDefinitions.King),
@@ -143,7 +143,9 @@ public sealed class StandardRepetitionEvaluatorTests
             evaluator.Evaluate(game.State)
                 .CurrentPositionOccurrences);
         Assert.Null(
-            Variant.PositionFactsEvaluator.CreatePositionKey(game.State)
+            TestSupport
+                .CreatePositionFactsEvaluator(definition)
+                .CreatePositionKey(game.State)
                 .EffectiveEnPassantTarget);
     }
 
@@ -169,7 +171,9 @@ public sealed class StandardRepetitionEvaluatorTests
             TestSupport.PieceAt(game, "a8")
                 .Definition);
         Assert.Contains(
-            Variant.PositionFactsEvaluator.CreatePositionKey(game.State)
+            TestSupport
+                .CreatePositionFactsEvaluator(definition)
+                .CreatePositionKey(game.State)
                 .PiecePlacements,
             placement => placement.Square == TestSupport.Square("a8") &&
                          placement.PieceDefinitionId ==
@@ -185,9 +189,24 @@ public sealed class StandardRepetitionEvaluatorTests
             TestSupport.At("e8", SideDefinitions.Black, PieceDefinitions.King));
         var game = definition.CreateGame();
         var snapshot = StandardGameSnapshot.Capture(game);
+        var mismatchedEvaluator = CreateEvaluator(
+            TestSupport.CreateDefinition(
+                new TurnOrder(SideDefinitions.White, SideDefinitions.Black),
+                TestSupport.At(
+                    "e1",
+                    SideDefinitions.White,
+                    PieceDefinitions.King),
+                TestSupport.At(
+                    "e8",
+                    SideDefinitions.Black,
+                    PieceDefinitions.King),
+                TestSupport.At(
+                    "g1",
+                    SideDefinitions.White,
+                    PieceDefinitions.Knight)));
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            Variant.RepetitionEvaluator.Evaluate(game.State));
+            mismatchedEvaluator.Evaluate(game.State));
 
         Assert.Contains("cannot be reconstructed", exception.Message);
         snapshot.AssertMatches(game);
@@ -209,11 +228,11 @@ public sealed class StandardRepetitionEvaluatorTests
         var doesNotCreateThird = TestSupport.FindMove(game, "b8", "c6");
 
         Assert.True(
-            Variant.RepetitionEvaluator.WouldCreateThreefoldRepetition(
+            Variant.DefaultRepetitionEvaluator.WouldCreateThreefoldRepetition(
                 game.State,
                 createsThird));
         Assert.False(
-            Variant.RepetitionEvaluator.WouldCreateThreefoldRepetition(
+            Variant.DefaultRepetitionEvaluator.WouldCreateThreefoldRepetition(
                 game.State,
                 doesNotCreateThird));
         snapshot.AssertMatches(game);
@@ -229,7 +248,7 @@ public sealed class StandardRepetitionEvaluatorTests
             TestSupport.Square("e5"));
 
         Assert.Throws<InvalidOperationException>(() =>
-            Variant.RepetitionEvaluator.WouldCreateThreefoldRepetition(
+            Variant.DefaultRepetitionEvaluator.WouldCreateThreefoldRepetition(
                 game.State,
                 illegalMove));
 
@@ -278,7 +297,9 @@ public sealed class StandardRepetitionEvaluatorTests
             legalMoveGenerator,
             executionResolver);
         var evaluator = new StandardRepetitionEvaluator(
-            new StandardPositionFactsEvaluator(legalMoveGenerator),
+            TestSupport.CreatePositionFactsEvaluator(
+                legalMoveGenerator,
+                gameStateFactory),
             gameStateFactory.Create,
             new GameMoveExecutor(moveResolver));
 
@@ -405,7 +426,7 @@ public sealed class StandardRepetitionEvaluatorTests
     private static StandardRepetitionFacts Evaluate(
         Game game)
     {
-        return Variant.RepetitionEvaluator.Evaluate(game.State);
+        return Variant.DefaultRepetitionEvaluator.Evaluate(game.State);
     }
 
     private static StandardRepetitionEvaluator CreateEvaluator(
@@ -420,7 +441,9 @@ public sealed class StandardRepetitionEvaluatorTests
         var gameStateFactory = TestSupport.CreateGameStateFactory(definition);
 
         return new StandardRepetitionEvaluator(
-            Variant.PositionFactsEvaluator,
+            TestSupport.CreatePositionFactsEvaluator(
+                legalMoveGenerator,
+                gameStateFactory),
             gameStateFactory.Create,
             new GameMoveExecutor(moveResolver));
     }
@@ -439,7 +462,9 @@ public sealed class StandardRepetitionEvaluatorTests
             replayResolver);
         var gameStateFactory = TestSupport.CreateGameStateFactory(definition);
         var evaluator = new StandardRepetitionEvaluator(
-            new StandardPositionFactsEvaluator(legalMoveGenerator),
+            TestSupport.CreatePositionFactsEvaluator(
+                legalMoveGenerator,
+                gameStateFactory),
             gameStateFactory.Create,
             new GameMoveExecutor(moveResolver));
 

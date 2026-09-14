@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using Chess.Core.Games;
 using Chess.Core.Games.Attacks;
 using Chess.Core.Games.Status;
 using Chess.Variants.Standard.Games;
@@ -379,7 +378,7 @@ public sealed class InsufficientMatingMaterialTests
     public void DeadPositionOutcomePreservesCheckStatus()
     {
         var game = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("a1", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At(
                 "c3",
@@ -404,7 +403,7 @@ public sealed class InsufficientMatingMaterialTests
     public void StalematePrecedesDeadPosition()
     {
         var game = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("a8", SideDefinitions.Black, PieceDefinitions.King),
             TestSupport.At("c7", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At(

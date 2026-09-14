@@ -43,7 +43,7 @@ public sealed class CastlingTests
     public void BlackCanCastleQueenSide()
     {
         var game = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("e1", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At("e8", SideDefinitions.Black, PieceDefinitions.King),
             TestSupport.At("a8", SideDefinitions.Black, PieceDefinitions.Rook));

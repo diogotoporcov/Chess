@@ -4,12 +4,23 @@
 using Chess.Core.Board.Transitions;
 using Chess.Core.Games;
 using Chess.Core.Movement;
+using Chess.Variants.Standard.Games.History;
 using Chess.Variants.Standard.Games.Rules;
 
 namespace Chess.Variants.Standard.Movement;
 
 public sealed class CastlingMoveExecutionResolver : IMoveExecutionResolver
 {
+    private readonly CastlingRightsEvaluator _castlingRightsEvaluator;
+
+    public CastlingMoveExecutionResolver(
+        CastlingRightsEvaluator castlingRightsEvaluator)
+    {
+        ArgumentNullException.ThrowIfNull(castlingRightsEvaluator);
+
+        _castlingRightsEvaluator = castlingRightsEvaluator;
+    }
+
     public bool CanResolve(
         Move move)
     {
@@ -28,7 +39,11 @@ public sealed class CastlingMoveExecutionResolver : IMoveExecutionResolver
             throw new InvalidOperationException("Move is not a castling move.");
         }
 
-        if (!CastlingRules.TryValidateStructure(gameState, move, out var plan))
+        if (!CastlingRules.TryValidateStructure(
+                _castlingRightsEvaluator,
+                gameState,
+                move,
+                out var plan))
         {
             throw new InvalidOperationException(
                 "Castling move is not valid in the current game state.");

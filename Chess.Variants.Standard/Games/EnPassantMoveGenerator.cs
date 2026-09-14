@@ -12,12 +12,17 @@ public sealed class EnPassantMoveGenerator : IGameMoveGenerator
 {
     private readonly IGameMoveGenerator _innerMoveGenerator;
 
+    private readonly StandardEnPassantTargetEvaluator _targetEvaluator;
+
     public EnPassantMoveGenerator(
-        IGameMoveGenerator innerMoveGenerator)
+        IGameMoveGenerator innerMoveGenerator,
+        StandardEnPassantTargetEvaluator targetEvaluator)
     {
         ArgumentNullException.ThrowIfNull(innerMoveGenerator);
+        ArgumentNullException.ThrowIfNull(targetEvaluator);
 
         _innerMoveGenerator = innerMoveGenerator;
+        _targetEvaluator = targetEvaluator;
     }
 
     public IEnumerable<Move> GenerateMoves(
@@ -31,7 +36,10 @@ public sealed class EnPassantMoveGenerator : IGameMoveGenerator
             yield return move;
         }
 
-        foreach (var move in EnPassantRules.GenerateMoves(gameState, from))
+        foreach (var move in EnPassantRules.GenerateMoves(
+                     _targetEvaluator,
+                     gameState,
+                     from))
         {
             yield return move;
         }

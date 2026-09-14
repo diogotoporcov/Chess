@@ -173,7 +173,7 @@ public sealed class StandardPositionFactsTests
             new TurnOrder(SideDefinitions.White, SideDefinitions.Black),
             placements);
         var blackToMove = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             placements);
 
         Assert.NotEqual(CreateKey(whiteToMove), CreateKey(blackToMove));
@@ -285,7 +285,7 @@ public sealed class StandardPositionFactsTests
     public void ReplacementRookOnOriginalSquareDoesNotRestoreRight()
     {
         var replacement = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("e1", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At("g1", SideDefinitions.White, PieceDefinitions.Rook),
             TestSupport.At("h1", SideDefinitions.White, PieceDefinitions.Rook),
@@ -296,7 +296,7 @@ public sealed class StandardPositionFactsTests
         TestSupport.Play(replacement, "g1", "h1");
 
         var apparentlyIntact = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("e1", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At("h1", SideDefinitions.White, PieceDefinitions.Rook),
             TestSupport.At("e8", SideDefinitions.Black, PieceDefinitions.King));
@@ -344,10 +344,35 @@ public sealed class StandardPositionFactsTests
     }
 
     [Fact]
+    public void RawEnPassantTargetComesFromLatestMoveAndUndoRestoresIt()
+    {
+        var game = Variant.CreateGame();
+
+        TestSupport.Play(game, "e2", "e4");
+
+        var afterDoubleAdvance = Evaluate(game);
+
+        Assert.Equal(
+            TestSupport.Square("e3"),
+            afterDoubleAdvance.EnPassantTarget);
+        Assert.Null(afterDoubleAdvance.EffectiveEnPassantTarget);
+
+        TestSupport.Play(game, "a7", "a6");
+
+        Assert.Null(
+            Evaluate(game)
+                .EnPassantTarget);
+
+        game.UndoLastMove();
+
+        Assert.Equal(afterDoubleAdvance, Evaluate(game));
+    }
+
+    [Fact]
     public void PinnedEnPassantOpportunityDoesNotParticipateInKey()
     {
         var game = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("e1", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At("e5", SideDefinitions.White, PieceDefinitions.Pawn),
             TestSupport.At("a8", SideDefinitions.Black, PieceDefinitions.King),
@@ -390,19 +415,23 @@ public sealed class StandardPositionFactsTests
     public void EvaluateRejectsNullState()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            Variant.PositionFactsEvaluator.Evaluate(null!));
+            Variant.DefaultPositionFactsEvaluator.Evaluate(null!));
     }
 
     private static StandardPositionFacts Evaluate(
         Game game)
     {
-        return Variant.PositionFactsEvaluator.Evaluate(game.State);
+        return TestSupport
+            .CreatePositionFactsEvaluator(game.Variant)
+            .Evaluate(game.State);
     }
 
     private static StandardPositionKey CreateKey(
         Game game)
     {
-        return Variant.PositionFactsEvaluator.CreatePositionKey(game.State);
+        return TestSupport
+            .CreatePositionFactsEvaluator(game.Variant)
+            .CreatePositionKey(game.State);
     }
 
     private static Game CreatePieceIdentityGame(
@@ -441,8 +470,6 @@ public sealed class StandardPositionFactsTests
         Game source)
     {
         var currentSide = source.State.CurrentSide;
-        var otherSide =
-            source.State.TurnOrder.Sides.Single(side => side != currentSide);
         var placements = source
             .BoardState
             .Topology
@@ -456,8 +483,6 @@ public sealed class StandardPositionFactsTests
             .Reverse()
             .ToArray();
 
-        return TestSupport.CreateGame(
-            new TurnOrder(currentSide, otherSide),
-            placements);
+        return TestSupport.CreateGame(currentSide, placements);
     }
 }

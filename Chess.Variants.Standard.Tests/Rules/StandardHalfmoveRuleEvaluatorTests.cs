@@ -44,9 +44,8 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
         var move = TestSupport.FindMove(game, "f6", "g8");
 
         Assert.True(
-            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
-                game.State,
-                move));
+            CreateEvaluator(game)
+                .WouldReachFiftyMoveThreshold(game.State, move));
     }
 
     [Fact]
@@ -69,9 +68,8 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
         var snapshot = StandardGameSnapshot.Capture(game);
 
         Assert.True(
-            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
-                game.State,
-                move));
+            CreateEvaluator(game)
+                .WouldReachFiftyMoveThreshold(game.State, move));
 
         snapshot.AssertMatches(game);
     }
@@ -92,14 +90,12 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
         var pawnMove = TestSupport.FindMove(game, "a2", "a3");
 
         Assert.True(
-            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
-                game.State,
-                quietMove));
+            CreateEvaluator(game)
+                .WouldReachFiftyMoveThreshold(game.State, quietMove));
 
         Assert.False(
-            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
-                game.State,
-                pawnMove));
+            CreateEvaluator(game)
+                .WouldReachFiftyMoveThreshold(game.State, pawnMove));
     }
 
     [Fact]
@@ -111,9 +107,8 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
         var move = TestSupport.FindMove(game, "f6", "h5");
 
         Assert.False(
-            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
-                game.State,
-                move));
+            CreateEvaluator(game)
+                .WouldReachFiftyMoveThreshold(game.State, move));
     }
 
     [Fact]
@@ -129,9 +124,8 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
             PromotionOptions.Queen);
 
         Assert.False(
-            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
-                game.State,
-                move));
+            CreateEvaluator(game)
+                .WouldReachFiftyMoveThreshold(game.State, move));
     }
 
     [Fact]
@@ -149,9 +143,8 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
             MoveOptions.EnPassant);
 
         Assert.False(
-            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
-                game.State,
-                move));
+            CreateEvaluator(game)
+                .WouldReachFiftyMoveThreshold(game.State, move));
     }
 
     [Fact]
@@ -162,7 +155,7 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
         var move = new Move(TestSupport.Square("e2"), TestSupport.Square("e5"));
 
         Assert.Throws<InvalidOperationException>(() =>
-            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
+            Variant.DefaultHalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
                 game.State,
                 move));
 
@@ -173,7 +166,7 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
     public void ProspectiveEvaluationDelegatesNullStateValidation()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
+            Variant.DefaultHalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
                 null!,
                 default));
     }
@@ -186,9 +179,8 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
         var snapshot = StandardGameSnapshot.Capture(game);
         var move = TestSupport.FindMove(game, "g8", "f6");
 
-        _ = Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
-            game.State,
-            move);
+        _ = CreateEvaluator(game)
+            .WouldReachFiftyMoveThreshold(game.State, move);
 
         snapshot.AssertMatches(game);
     }
@@ -224,7 +216,14 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
     private static StandardHalfmoveRuleFacts Evaluate(
         Game game)
     {
-        return Variant.HalfmoveRuleEvaluator.Evaluate(game.State);
+        return CreateEvaluator(game)
+            .Evaluate(game.State);
+    }
+
+    private static StandardHalfmoveRuleEvaluator CreateEvaluator(
+        Game game)
+    {
+        return TestSupport.CreateHalfmoveRuleEvaluator(game.Variant);
     }
 
     private static Game CreateLongHistoryGame(

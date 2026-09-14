@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-namespace Chess.Variants.Standard.Games.History;
+namespace Chess.Variants.Standard.Games;
 
 public readonly record struct CastlingRights
 {

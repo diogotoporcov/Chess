@@ -66,7 +66,7 @@ public sealed class EnPassantTests
     public void EnPassantThatWouldExposeOwnKingIsIllegal()
     {
         var game = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("e1", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At("e5", SideDefinitions.White, PieceDefinitions.Pawn),
             TestSupport.At("a8", SideDefinitions.Black, PieceDefinitions.King),

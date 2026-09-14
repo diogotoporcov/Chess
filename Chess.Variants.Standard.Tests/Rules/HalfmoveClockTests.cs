@@ -161,7 +161,9 @@ public sealed class HalfmoveClockTests
     private static int Clock(
         Game game)
     {
-        return Variant.PositionFactsEvaluator.EvaluateHalfmoveClock(game.State);
+        return TestSupport
+            .CreatePositionFactsEvaluator(game.Variant)
+            .EvaluateHalfmoveClock(game.State);
     }
 
     private static Game CreatePromotionGame(

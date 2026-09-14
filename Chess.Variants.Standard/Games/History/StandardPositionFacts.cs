@@ -11,6 +11,10 @@ public sealed record StandardPositionFacts
 
     public int HalfmoveClock { get; }
 
+    public int FullmoveNumber { get; }
+
+    public Square? EnPassantTarget { get; }
+
     public CastlingRights CastlingRights => PositionKey.CastlingRights;
 
     public Square? EffectiveEnPassantTarget =>
@@ -18,7 +22,9 @@ public sealed record StandardPositionFacts
 
     public StandardPositionFacts(
         StandardPositionKey positionKey,
-        int halfmoveClock)
+        Square? enPassantTarget,
+        int halfmoveClock,
+        int fullmoveNumber)
     {
         ArgumentNullException.ThrowIfNull(positionKey);
 
@@ -27,7 +33,14 @@ public sealed record StandardPositionFacts
             throw new ArgumentOutOfRangeException(nameof(halfmoveClock));
         }
 
+        if (fullmoveNumber < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(fullmoveNumber));
+        }
+
         PositionKey = positionKey;
+        EnPassantTarget = enPassantTarget;
         HalfmoveClock = halfmoveClock;
+        FullmoveNumber = fullmoveNumber;
     }
 }

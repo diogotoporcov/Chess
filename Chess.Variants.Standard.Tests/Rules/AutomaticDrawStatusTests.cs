@@ -321,12 +321,13 @@ public sealed class AutomaticDrawStatusTests
         var moveResolver = new GameMoveResolver(
             legalMoveGenerator,
             executionResolver);
-        var positionFactsEvaluator = new StandardPositionFactsEvaluator(
-            legalMoveGenerator);
+        var gameStateFactory = TestSupport.CreateGameStateFactory(definition);
+        var positionFactsEvaluator = TestSupport.CreatePositionFactsEvaluator(
+            legalMoveGenerator,
+            gameStateFactory);
         var repetitionEvaluator = new StandardRepetitionEvaluator(
             positionFactsEvaluator,
-            TestSupport.CreateGameStateFactory(definition)
-                .Create,
+            gameStateFactory.Create,
             new GameMoveExecutor(moveResolver));
         var halfmoveRuleEvaluator = new StandardHalfmoveRuleEvaluator(
             positionFactsEvaluator,
@@ -438,7 +439,7 @@ public sealed class AutomaticDrawStatusTests
     private static Game CreatePositionTerminationGame()
     {
         return TestSupport.CreateNonTerminatingGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("a8", SideDefinitions.Black, PieceDefinitions.King),
             TestSupport.At(
                 "g8",
@@ -455,7 +456,7 @@ public sealed class AutomaticDrawStatusTests
     private static Game CreateStalemateTerminationGame()
     {
         return TestSupport.CreateNonTerminatingGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("b8", SideDefinitions.Black, PieceDefinitions.King),
             TestSupport.At("c6", SideDefinitions.White, PieceDefinitions.King),
             TestSupport.At("e3", SideDefinitions.White, PieceDefinitions.Queen),
@@ -468,7 +469,7 @@ public sealed class AutomaticDrawStatusTests
     private static Game CreateCheckAtThresholdGame()
     {
         return TestSupport.CreateNonTerminatingGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             TestSupport.At("e8", SideDefinitions.Black, PieceDefinitions.King),
             TestSupport.At(
                 "g8",
@@ -492,10 +493,13 @@ public sealed class AutomaticDrawStatusTests
             legalMoveGenerator,
             executionResolver);
 
+        var gameStateFactory = TestSupport.CreateGameStateFactory(definition);
+
         return new StandardRepetitionEvaluator(
-            new StandardPositionFactsEvaluator(legalMoveGenerator),
-            TestSupport.CreateGameStateFactory(definition)
-                .Create,
+            TestSupport.CreatePositionFactsEvaluator(
+                legalMoveGenerator,
+                gameStateFactory),
+            gameStateFactory.Create,
             new GameMoveExecutor(moveResolver));
     }
 
@@ -509,7 +513,9 @@ public sealed class AutomaticDrawStatusTests
     private static StandardHalfmoveRuleFacts HalfmoveFacts(
         Game game)
     {
-        return Variant.HalfmoveRuleEvaluator.Evaluate(game.State);
+        return TestSupport
+            .CreateHalfmoveRuleEvaluator(game.Variant)
+            .Evaluate(game.State);
     }
 
     private static void PlayInitialPositionCycle(

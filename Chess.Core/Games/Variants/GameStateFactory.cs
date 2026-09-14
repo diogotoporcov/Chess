@@ -7,6 +7,7 @@ using Chess.Core.Board.Topology;
 using Chess.Core.Movement;
 using Chess.Core.Movement.Orientation;
 using Chess.Core.Pieces;
+using Chess.Core.Sides;
 
 namespace Chess.Core.Games.Variants;
 
@@ -20,6 +21,8 @@ public sealed class GameStateFactory
 
     public TurnOrder TurnOrder { get; }
 
+    public Side InitialSide { get; }
+
     public IReadOnlyList<InitialPiecePlacement> InitialPlacements { get; }
 
     public GameStateFactory(
@@ -27,13 +30,37 @@ public sealed class GameStateFactory
         TurnOrder turnOrder,
         IRelativeDirectionResolver relativeDirectionResolver,
         IBoardRegionResolver boardRegionResolver,
+        params InitialPiecePlacement[] initialPlacements) : this(
+        topology,
+        turnOrder,
+        GetFirstSide(turnOrder),
+        relativeDirectionResolver,
+        boardRegionResolver,
+        initialPlacements)
+    {
+    }
+
+    public GameStateFactory(
+        BoardTopology topology,
+        TurnOrder turnOrder,
+        Side initialSide,
+        IRelativeDirectionResolver relativeDirectionResolver,
+        IBoardRegionResolver boardRegionResolver,
         params InitialPiecePlacement[] initialPlacements)
     {
         ArgumentNullException.ThrowIfNull(topology);
         ArgumentNullException.ThrowIfNull(turnOrder);
+        ArgumentNullException.ThrowIfNull(initialSide);
         ArgumentNullException.ThrowIfNull(relativeDirectionResolver);
         ArgumentNullException.ThrowIfNull(boardRegionResolver);
         ArgumentNullException.ThrowIfNull(initialPlacements);
+
+        if (!turnOrder.Contains(initialSide))
+        {
+            throw new ArgumentException(
+                "Initial side must be part of the turn order.",
+                nameof(initialSide));
+        }
 
         if (Array.IndexOf(initialPlacements, null!) >= 0)
         {
@@ -73,6 +100,7 @@ public sealed class GameStateFactory
 
         Topology = topology;
         TurnOrder = turnOrder;
+        InitialSide = initialSide;
 
         _relativeDirectionResolver = relativeDirectionResolver;
         _boardRegionResolver = boardRegionResolver;
@@ -95,6 +123,14 @@ public sealed class GameStateFactory
             _relativeDirectionResolver,
             _boardRegionResolver);
 
-        return new GameState(movementContext, TurnOrder);
+        return new GameState(movementContext, TurnOrder, InitialSide);
+    }
+
+    private static Side GetFirstSide(
+        TurnOrder turnOrder)
+    {
+        ArgumentNullException.ThrowIfNull(turnOrder);
+
+        return turnOrder.First;
     }
 }

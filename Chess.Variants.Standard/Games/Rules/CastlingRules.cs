@@ -17,9 +17,11 @@ namespace Chess.Variants.Standard.Games.Rules;
 internal static class CastlingRules
 {
     public static IEnumerable<Move> GenerateCandidates(
+        CastlingRightsEvaluator castlingRightsEvaluator,
         GameState gameState,
         Square from)
     {
+        ArgumentNullException.ThrowIfNull(castlingRightsEvaluator);
         ArgumentNullException.ThrowIfNull(gameState);
 
         if (!gameState.BoardState.TryGetPiece(from, out var king))
@@ -44,7 +46,11 @@ internal static class CastlingRules
 
             var move = new Move(plan.KingFrom, plan.KingTo, optionId);
 
-            if (TryValidateStructure(gameState, move, out _))
+            if (TryValidateStructure(
+                    castlingRightsEvaluator,
+                    gameState,
+                    move,
+                    out _))
             {
                 yield return move;
             }
@@ -52,10 +58,12 @@ internal static class CastlingRules
     }
 
     public static bool TryValidateStructure(
+        CastlingRightsEvaluator castlingRightsEvaluator,
         GameState gameState,
         Move move,
         out CastlingPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(castlingRightsEvaluator);
         ArgumentNullException.ThrowIfNull(gameState);
 
         plan = default;
@@ -98,7 +106,7 @@ internal static class CastlingRules
 
         var kingSide = move.OptionId == MoveOptions.CastleKingSide;
 
-        if (!CastlingRightsEvaluator.HasRight(gameState, king.Side, kingSide))
+        if (!castlingRightsEvaluator.HasRight(gameState, king.Side, kingSide))
         {
             return false;
         }

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using Chess.Core.Games;
 using Chess.Core.Movement;
 using Chess.Variants.Standard.Pieces;
 using Chess.Variants.Standard.Sides;
@@ -86,7 +85,7 @@ public sealed class PawnTests
     public void BlackPawn_UsesBlackRelativeOrientation()
     {
         var game = TestSupport.CreateGame(
-            new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
+            SideDefinitions.Black,
             [
                 .. Kings(),
                 TestSupport.At(

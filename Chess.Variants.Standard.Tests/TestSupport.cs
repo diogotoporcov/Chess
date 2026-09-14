@@ -17,6 +17,7 @@ using Chess.Variants.Standard.Games.History;
 using Chess.Variants.Standard.Games.Rules;
 using Chess.Variants.Standard.Movement;
 using Chess.Variants.Standard.Movement.Orientation;
+using Chess.Variants.Standard.Pieces;
 using Chess.Variants.Standard.Sides;
 
 namespace Chess.Variants.Standard.Tests;
@@ -52,25 +53,55 @@ internal static class TestSupport
     public static Game CreateGame(
         params Placement[] placements)
     {
-        return CreateGame(
-            new TurnOrder(SideDefinitions.White, SideDefinitions.Black),
-            placements);
+        return CreateGame(SideDefinitions.White, placements);
+    }
+
+    public static Game CreateGame(
+        Side sideToMove,
+        params Placement[] placements)
+    {
+        return CreateDefinition(
+                TurnOrderDefinition.Instance,
+                sideToMove,
+                isStatusEvaluationEnabled: true,
+                placements)
+            .CreateGame();
     }
 
     public static Game CreateGame(
         TurnOrder turnOrder,
         params Placement[] placements)
     {
-        return CreateDefinition(turnOrder, placements)
+        return CreateDefinition(
+                turnOrder,
+                turnOrder.First,
+                isStatusEvaluationEnabled: true,
+                placements)
             .CreateGame();
+    }
+
+    public static Game CreateGame(
+        StandardInitialState initialState)
+    {
+        return Variant.CreateGame(initialState);
     }
 
     public static Game CreateNonTerminatingGame(
         params Placement[] placements)
     {
-        return CreateNonTerminatingGame(
-            new TurnOrder(SideDefinitions.White, SideDefinitions.Black),
-            placements);
+        return CreateNonTerminatingGame(SideDefinitions.White, placements);
+    }
+
+    public static Game CreateNonTerminatingGame(
+        Side sideToMove,
+        params Placement[] placements)
+    {
+        return CreateDefinition(
+                TurnOrderDefinition.Instance,
+                sideToMove,
+                isStatusEvaluationEnabled: false,
+                placements)
+            .CreateGame();
     }
 
     public static Game CreateNonTerminatingGame(
@@ -79,6 +110,7 @@ internal static class TestSupport
     {
         return CreateDefinition(
                 turnOrder,
+                turnOrder.First,
                 isStatusEvaluationEnabled: false,
                 placements)
             .CreateGame();
@@ -90,27 +122,45 @@ internal static class TestSupport
     {
         return CreateDefinition(
             turnOrder,
+            turnOrder.First,
+            isStatusEvaluationEnabled: true,
+            placements);
+    }
+
+    public static GameVariantDefinition CreateDefinition(
+        Side sideToMove,
+        params Placement[] placements)
+    {
+        return CreateDefinition(
+            TurnOrderDefinition.Instance,
+            sideToMove,
             isStatusEvaluationEnabled: true,
             placements);
     }
 
     private static GameVariantDefinition CreateDefinition(
         TurnOrder turnOrder,
+        Side initialSide,
         bool isStatusEvaluationEnabled,
         params Placement[] placements)
     {
-        var executionResolver = CreateExecutionResolver();
-        var simulator = new GameMoveSimulator(executionResolver);
+        var initialState = CreateInitialState(initialSide, placements);
+        var components = CreateRuleComponents(initialState);
         var checkDetector = new CheckDetector(new PatternAttackGenerator());
-        var legalGenerator = CreateLegalMoveGenerator(simulator, checkDetector);
-        var gameStateFactory = CreateGameStateFactory(turnOrder, placements);
+        var legalGenerator = components.LegalMoveGenerator;
+        var executionResolver = components.ExecutionResolver;
+        var gameStateFactory = CreateGameStateFactory(
+            turnOrder,
+            initialSide,
+            placements);
 
         IGameStatusEvaluator statusEvaluator = isStatusEvaluationEnabled
             ? CreateStatusEvaluator(
                 gameStateFactory,
                 legalGenerator,
                 executionResolver,
-                checkDetector)
+                checkDetector,
+                initialState)
             : new NonTerminatingStatusEvaluator();
 
         return CreateDefinition(
@@ -153,9 +203,18 @@ internal static class TestSupport
         TurnOrder turnOrder,
         params Placement[] placements)
     {
+        return CreateGameStateFactory(turnOrder, turnOrder.First, placements);
+    }
+
+    public static GameStateFactory CreateGameStateFactory(
+        TurnOrder turnOrder,
+        Side initialSide,
+        params Placement[] placements)
+    {
         return new GameStateFactory(
             BoardTopologyFactory.Create(),
             turnOrder,
+            initialSide,
             Orientations.Resolver,
             BoardRegions.Resolver,
             placements
@@ -172,6 +231,7 @@ internal static class TestSupport
         return new GameStateFactory(
             definition.Topology,
             definition.TurnOrder,
+            definition.InitialSide,
             Orientations.Resolver,
             BoardRegions.Resolver,
             [.. definition.InitialPlacements]);
@@ -183,18 +243,27 @@ internal static class TestSupport
         var simulator = new GameMoveSimulator(executionResolver);
         var checkDetector = new CheckDetector(new PatternAttackGenerator());
 
-        return CreateLegalMoveGenerator(simulator, checkDetector);
+        return CreateLegalMoveGenerator(
+            simulator,
+            checkDetector,
+            new CastlingRightsEvaluator(
+                new CastlingRights(true, true, true, true)),
+            new StandardEnPassantTargetEvaluator(null));
     }
 
     private static LegalMoveGenerator CreateLegalMoveGenerator(
         GameMoveSimulator simulator,
-        CheckDetector checkDetector)
+        CheckDetector checkDetector,
+        CastlingRightsEvaluator castlingRightsEvaluator,
+        StandardEnPassantTargetEvaluator enPassantTargetEvaluator)
     {
         var pseudoLegalGenerator = new CastlingMoveGenerator(
             new EnPassantMoveGenerator(
-                new PromotionMoveGenerator(new PseudoLegalGameMoveGenerator())),
+                new PromotionMoveGenerator(new PseudoLegalGameMoveGenerator()),
+                enPassantTargetEvaluator),
             simulator,
-            checkDetector);
+            checkDetector,
+            castlingRightsEvaluator);
 
         return new LegalMoveGenerator(
             pseudoLegalGenerator,
@@ -204,11 +273,31 @@ internal static class TestSupport
 
     public static IMoveExecutionResolver CreateExecutionResolver()
     {
+        var castlingRightsEvaluator = new CastlingRightsEvaluator(
+            new CastlingRights(true, true, true, true));
+        var enPassantTargetEvaluator =
+            new StandardEnPassantTargetEvaluator(null);
+
         return new CompositeMoveExecutionResolver(
             new BasicMoveExecutionResolver(),
             new PromotionMoveExecutionResolver(),
-            new EnPassantMoveExecutionResolver(),
-            new CastlingMoveExecutionResolver());
+            new EnPassantMoveExecutionResolver(enPassantTargetEvaluator),
+            new CastlingMoveExecutionResolver(castlingRightsEvaluator));
+    }
+
+    public static CastlingMoveExecutionResolver
+        CreateCastlingMoveExecutionResolver()
+    {
+        return new CastlingMoveExecutionResolver(
+            new CastlingRightsEvaluator(
+                new CastlingRights(true, true, true, true)));
+    }
+
+    public static EnPassantMoveExecutionResolver
+        CreateEnPassantMoveExecutionResolver()
+    {
+        return new EnPassantMoveExecutionResolver(
+            new StandardEnPassantTargetEvaluator(null));
     }
 
     public static StatusEvaluator CreateStatusEvaluator(
@@ -217,28 +306,61 @@ internal static class TestSupport
         var executionResolver = CreateExecutionResolver();
         var simulator = new GameMoveSimulator(executionResolver);
         var checkDetector = new CheckDetector(new PatternAttackGenerator());
+        var castlingRightsEvaluator = new CastlingRightsEvaluator(
+            InferCastlingRights(definition.InitialPlacements));
+        var enPassantTargetEvaluator =
+            new StandardEnPassantTargetEvaluator(null);
         var legalMoveGenerator = CreateLegalMoveGenerator(
             simulator,
-            checkDetector);
+            checkDetector,
+            castlingRightsEvaluator,
+            enPassantTargetEvaluator);
 
         return CreateStatusEvaluator(
             CreateGameStateFactory(definition),
             legalMoveGenerator,
             executionResolver,
-            checkDetector);
+            checkDetector,
+            CreateInitialState(
+                definition.InitialSide,
+                definition
+                    .InitialPlacements
+                    .Select(placement => new Placement(
+                        placement.Square,
+                        placement.Side,
+                        placement.Definition))
+                    .ToArray()));
     }
 
     public static StatusEvaluator CreateStatusEvaluator(
         GameStateFactory gameStateFactory,
         IGameMoveGenerator legalMoveGenerator,
         IMoveExecutionResolver executionResolver,
-        CheckDetector checkDetector)
+        CheckDetector checkDetector,
+        StandardInitialState? initialState = null)
     {
         var moveResolver = new GameMoveResolver(
             legalMoveGenerator,
             executionResolver);
+        initialState ??= CreateInitialState(
+            gameStateFactory.InitialSide,
+            gameStateFactory
+                .InitialPlacements
+                .Select(placement => new Placement(
+                    placement.Square,
+                    placement.Side,
+                    placement.Definition))
+                .ToArray());
+        var castlingRightsEvaluator = new CastlingRightsEvaluator(
+            initialState.CastlingRights);
+        var enPassantTargetEvaluator =
+            new StandardEnPassantTargetEvaluator(initialState.EnPassantTarget);
         var positionFactsEvaluator = new StandardPositionFactsEvaluator(
-            legalMoveGenerator);
+            legalMoveGenerator,
+            castlingRightsEvaluator,
+            enPassantTargetEvaluator,
+            initialState.HalfmoveClock,
+            initialState.FullmoveNumber);
         var repetitionEvaluator = new StandardRepetitionEvaluator(
             positionFactsEvaluator,
             gameStateFactory.Create,
@@ -252,6 +374,208 @@ internal static class TestSupport
             checkDetector,
             repetitionEvaluator,
             halfmoveRuleEvaluator);
+    }
+
+    public static StandardPositionFactsEvaluator CreatePositionFactsEvaluator(
+        StandardInitialState initialState)
+    {
+        return CreateRuleComponents(initialState)
+            .PositionFactsEvaluator;
+    }
+
+    public static StandardPositionFactsEvaluator CreatePositionFactsEvaluator(
+        GameVariantDefinition definition)
+    {
+        return CreatePositionFactsEvaluator(CreateInitialState(definition));
+    }
+
+    public static StandardHalfmoveRuleEvaluator CreateHalfmoveRuleEvaluator(
+        GameVariantDefinition definition)
+    {
+        var components = CreateRuleComponents(CreateInitialState(definition));
+        var moveResolver = new GameMoveResolver(
+            components.LegalMoveGenerator,
+            components.ExecutionResolver);
+
+        return new StandardHalfmoveRuleEvaluator(
+            components.PositionFactsEvaluator,
+            moveResolver);
+    }
+
+    public static StandardRepetitionEvaluator CreateRepetitionEvaluator(
+        StandardInitialState initialState)
+    {
+        var components = CreateRuleComponents(initialState);
+        var gameStateFactory = new GameStateFactory(
+            BoardTopologyFactory.Create(),
+            TurnOrderDefinition.Instance,
+            initialState.SideToMove,
+            Orientations.Resolver,
+            BoardRegions.Resolver,
+            [.. initialState.Placements]);
+        var moveResolver = new GameMoveResolver(
+            components.LegalMoveGenerator,
+            components.ExecutionResolver);
+
+        return new StandardRepetitionEvaluator(
+            components.PositionFactsEvaluator,
+            gameStateFactory.Create,
+            new GameMoveExecutor(moveResolver));
+    }
+
+    public static StandardPositionFactsEvaluator CreatePositionFactsEvaluator(
+        IGameMoveGenerator legalMoveGenerator,
+        GameStateFactory gameStateFactory)
+    {
+        var initialState = CreateInitialState(
+            gameStateFactory.InitialSide,
+            gameStateFactory
+                .InitialPlacements
+                .Select(placement => new Placement(
+                    placement.Square,
+                    placement.Side,
+                    placement.Definition))
+                .ToArray());
+
+        return new StandardPositionFactsEvaluator(
+            legalMoveGenerator,
+            new CastlingRightsEvaluator(initialState.CastlingRights),
+            new StandardEnPassantTargetEvaluator(initialState.EnPassantTarget),
+            initialState.HalfmoveClock,
+            initialState.FullmoveNumber);
+    }
+
+    public static StandardInitialState CreateInitialState(
+        Side sideToMove,
+        IEnumerable<Placement> placements,
+        CastlingRights? castlingRights = null,
+        Square? enPassantTarget = null,
+        int halfmoveClock = 0,
+        int fullmoveNumber = 1)
+    {
+        var placementArray = placements.ToArray();
+        var initialPlacements = placementArray
+            .Select(placement => new InitialPiecePlacement(
+                placement.Square,
+                placement.Side,
+                placement.Definition))
+            .ToArray();
+
+        return new StandardInitialState(
+            initialPlacements,
+            sideToMove,
+            castlingRights ?? InferCastlingRights(initialPlacements),
+            enPassantTarget,
+            halfmoveClock,
+            fullmoveNumber);
+    }
+
+    private static StandardInitialState CreateInitialState(
+        GameVariantDefinition definition)
+    {
+        return CreateInitialState(
+            definition.InitialSide,
+            [
+                .. definition.InitialPlacements.Select(placement =>
+                    new Placement(
+                        placement.Square,
+                        placement.Side,
+                        placement.Definition))
+            ]);
+    }
+
+    private static RuleComponents CreateRuleComponents(
+        StandardInitialState initialState)
+    {
+        var castlingRightsEvaluator = new CastlingRightsEvaluator(
+            initialState.CastlingRights);
+        var enPassantTargetEvaluator =
+            new StandardEnPassantTargetEvaluator(initialState.EnPassantTarget);
+        var executionResolver = new CompositeMoveExecutionResolver(
+            new BasicMoveExecutionResolver(),
+            new PromotionMoveExecutionResolver(),
+            new EnPassantMoveExecutionResolver(enPassantTargetEvaluator),
+            new CastlingMoveExecutionResolver(castlingRightsEvaluator));
+        var simulator = new GameMoveSimulator(executionResolver);
+        var checkDetector = new CheckDetector(new PatternAttackGenerator());
+        var legalMoveGenerator = CreateLegalMoveGenerator(
+            simulator,
+            checkDetector,
+            castlingRightsEvaluator,
+            enPassantTargetEvaluator);
+        var positionFactsEvaluator = new StandardPositionFactsEvaluator(
+            legalMoveGenerator,
+            castlingRightsEvaluator,
+            enPassantTargetEvaluator,
+            initialState.HalfmoveClock,
+            initialState.FullmoveNumber);
+
+        return new RuleComponents(
+            legalMoveGenerator,
+            executionResolver,
+            positionFactsEvaluator);
+    }
+
+    private static CastlingRights InferCastlingRights(
+        IEnumerable<InitialPiecePlacement> placements)
+    {
+        var placementArray = placements.ToArray();
+
+        return new CastlingRights(
+            HasPiece(
+                placementArray,
+                "e1",
+                SideDefinitions.White,
+                PieceDefinitions.King) &&
+            HasPiece(
+                placementArray,
+                "h1",
+                SideDefinitions.White,
+                PieceDefinitions.Rook),
+            HasPiece(
+                placementArray,
+                "e1",
+                SideDefinitions.White,
+                PieceDefinitions.King) &&
+            HasPiece(
+                placementArray,
+                "a1",
+                SideDefinitions.White,
+                PieceDefinitions.Rook),
+            HasPiece(
+                placementArray,
+                "e8",
+                SideDefinitions.Black,
+                PieceDefinitions.King) &&
+            HasPiece(
+                placementArray,
+                "h8",
+                SideDefinitions.Black,
+                PieceDefinitions.Rook),
+            HasPiece(
+                placementArray,
+                "e8",
+                SideDefinitions.Black,
+                PieceDefinitions.King) &&
+            HasPiece(
+                placementArray,
+                "a8",
+                SideDefinitions.Black,
+                PieceDefinitions.Rook));
+    }
+
+    private static bool HasPiece(
+        IEnumerable<InitialPiecePlacement> placements,
+        string coordinate,
+        Side side,
+        PieceDefinition definition)
+    {
+        var square = Square(coordinate);
+
+        return placements.Any(placement =>
+            placement.Square == square &&
+            ReferenceEquals(placement.Side, side) &&
+            ReferenceEquals(placement.Definition, definition));
     }
 
     public static Move FindMove(
@@ -299,6 +623,11 @@ internal readonly record struct Placement(
     Square Square,
     Side Side,
     PieceDefinition Definition);
+
+internal sealed record RuleComponents(
+    IGameMoveGenerator LegalMoveGenerator,
+    IMoveExecutionResolver ExecutionResolver,
+    StandardPositionFactsEvaluator PositionFactsEvaluator);
 
 internal sealed record StandardGameSnapshot(
     Side CurrentSide,

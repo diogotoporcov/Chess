@@ -6,6 +6,7 @@ using Chess.Core.Games;
 using Chess.Core.Pieces;
 using Chess.Core.Sides;
 using Chess.Variants.Standard.Board;
+using Chess.Variants.Standard.Games;
 using Chess.Variants.Standard.Pieces;
 using Chess.Variants.Standard.Sides;
 
@@ -86,6 +87,38 @@ public sealed class InitialPositionTests
             TestSupport.AllMoves(game)
                 .Count);
         Assert.Empty(game.GenerateMoves(TestSupport.Square("a7")));
+    }
+
+    [Fact]
+    public void DefaultInitialStateAndCurrentFactsAreCanonical()
+    {
+        var initialState = Variant.DefaultInitialState;
+        var game = Variant.CreateGame();
+        var facts = Variant.DefaultPositionFactsEvaluator.Evaluate(game.State);
+
+        Assert.Same(StandardInitialState.Default, initialState);
+        Assert.Equal(32, initialState.Placements.Count);
+        Assert.Same(SideDefinitions.White, initialState.SideToMove);
+        Assert.Equal(
+            new CastlingRights(true, true, true, true),
+            initialState.CastlingRights);
+        Assert.Null(initialState.EnPassantTarget);
+        Assert.Equal(0, initialState.HalfmoveClock);
+        Assert.Equal(1, initialState.FullmoveNumber);
+        Assert.Equal(
+            [SideDefinitions.White, SideDefinitions.Black],
+            game.State.TurnOrder.Sides);
+        Assert.Same(SideDefinitions.White, Variant.Definition.InitialSide);
+        Assert.Equal(
+            initialState.Placements,
+            Variant.Definition.InitialPlacements);
+        Assert.Equal(initialState.CastlingRights, facts.CastlingRights);
+        Assert.Null(facts.EnPassantTarget);
+        Assert.Null(facts.EffectiveEnPassantTarget);
+        Assert.Equal(0, facts.HalfmoveClock);
+        Assert.Equal(1, facts.FullmoveNumber);
+        Assert.Equal(StatusDefinitions.Active, game.Status.Id);
+        Assert.Null(game.Outcome);
     }
 
     [Fact]
