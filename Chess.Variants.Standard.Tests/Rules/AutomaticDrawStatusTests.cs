@@ -3,6 +3,7 @@
 
 using Chess.Core.Games;
 using Chess.Core.Games.Attacks;
+using Chess.Core.Games.Status;
 using Chess.Core.Games.Variants;
 using Chess.Variants.Standard.Games;
 using Chess.Variants.Standard.Games.History;
@@ -28,6 +29,7 @@ public sealed class AutomaticDrawStatusTests
                 .CurrentPositionOccurrences);
         Assert.Equal(StatusDefinitions.Active, game.Status.Id);
         Assert.False(game.Status.IsTerminal);
+        Assert.Null(game.Status.Outcome);
 
         PlayInitialPositionCycle(game);
 
@@ -37,18 +39,23 @@ public sealed class AutomaticDrawStatusTests
                 .CurrentPositionOccurrences);
         Assert.Equal(StatusDefinitions.Active, game.Status.Id);
         Assert.False(game.Status.IsTerminal);
+        Assert.Null(game.Status.Outcome);
 
         PlayInitialPositionCycle(game);
 
         var status = game.Status;
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.Equal(
             5,
             RepetitionFacts(game)
                 .CurrentPositionOccurrences);
-        Assert.Equal(StatusDefinitions.FivefoldRepetition, status.Id);
+        Assert.Equal(StatusDefinitions.Active, status.Id);
+        Assert.Equal(
+            TerminationDefinitions.FivefoldRepetition,
+            outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
 
         var otherwiseLegalMove = TestSupport.FindMove(game, "g1", "f3");
 
@@ -58,7 +65,7 @@ public sealed class AutomaticDrawStatusTests
         game.UndoLastMove();
 
         Assert.False(game.Status.IsTerminal);
-        Assert.NotEqual(StatusDefinitions.FivefoldRepetition, game.Status.Id);
+        Assert.Null(game.Status.Outcome);
     }
 
     [Fact]
@@ -85,6 +92,7 @@ public sealed class AutomaticDrawStatusTests
             HalfmoveFacts(game)
                 .IsFiftyMoveThresholdReached);
         Assert.False(game.Status.IsTerminal);
+        Assert.Null(game.Status.Outcome);
 
         PlayPeriodicQuietMoves(game, 120);
 
@@ -103,10 +111,12 @@ public sealed class AutomaticDrawStatusTests
             HalfmoveFacts(game)
                 .IsSeventyFiveMoveThresholdReached);
         Assert.False(game.Status.IsTerminal);
+        Assert.Null(game.Status.Outcome);
 
         PlayPeriodicQuietMoves(game, 150);
 
         var status = game.Status;
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.Equal(
             150,
@@ -118,9 +128,12 @@ public sealed class AutomaticDrawStatusTests
         Assert.False(
             repetitionEvaluator.Evaluate(game.State)
                 .IsFivefoldRepetition);
-        Assert.Equal(StatusDefinitions.SeventyFiveMoveRule, status.Id);
+        Assert.Equal(StatusDefinitions.Active, status.Id);
+        Assert.Equal(
+            TerminationDefinitions.SeventyFiveMoveRule,
+            outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
 
         var otherwiseLegalMove = TestSupport
             .AllMoves(game)[0];
@@ -135,7 +148,7 @@ public sealed class AutomaticDrawStatusTests
             HalfmoveFacts(game)
                 .HalfmoveClock);
         Assert.False(game.Status.IsTerminal);
-        Assert.NotEqual(StatusDefinitions.SeventyFiveMoveRule, game.Status.Id);
+        Assert.Null(game.Status.Outcome);
     }
 
     [Fact]
@@ -157,15 +170,61 @@ public sealed class AutomaticDrawStatusTests
             .Evaluate(game.State);
         var repetitionFacts = CreateRepetitionEvaluator(game.Variant)
             .Evaluate(game.State);
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.True(repetitionFacts.IsFivefoldRepetition);
-        Assert.Equal(StatusDefinitions.SeventyFiveMoveRule, status.Id);
+        Assert.Equal(StatusDefinitions.Active, status.Id);
+        Assert.Equal(
+            TerminationDefinitions.SeventyFiveMoveRule,
+            outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
     }
 
     [Fact]
-    public void AutomaticDrawPrecedesNonTerminalCheckAtHalfmove150()
+    public void DeadPositionPrecedesHistoricalAutomaticDraws()
+    {
+        var game = TestSupport.CreateNonTerminatingGame(
+            TestSupport.At("a1", SideDefinitions.White, PieceDefinitions.King),
+            TestSupport.At(
+                "c1",
+                SideDefinitions.White,
+                PieceDefinitions.Bishop),
+            TestSupport.At("h8", SideDefinitions.Black, PieceDefinitions.King));
+
+        for (var cycle = 0; cycle < 37; cycle++)
+        {
+            TestSupport.Play(game, "a1", "a2");
+            TestSupport.Play(game, "h8", "h7");
+            TestSupport.Play(game, "a2", "a1");
+            TestSupport.Play(game, "h7", "h8");
+        }
+
+        TestSupport.Play(game, "a1", "a2");
+        TestSupport.Play(game, "h8", "h7");
+
+        var status = TestSupport
+            .CreateStatusEvaluator(game.Variant)
+            .Evaluate(game.State);
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
+
+        Assert.Equal(
+            150,
+            HalfmoveFacts(game)
+                .HalfmoveClock);
+        Assert.True(
+            RepetitionFacts(game)
+                .IsFivefoldRepetition);
+        Assert.True(
+            InsufficientMatingMaterialDetector.IsInsufficient(game.State));
+        Assert.Equal(StatusDefinitions.Active, status.Id);
+        Assert.Equal(TerminationDefinitions.DeadPosition, outcome.Termination);
+        Assert.True(status.IsTerminal);
+        Assert.Empty(outcome.Winners);
+    }
+
+    [Fact]
+    public void SeventyFiveMoveOutcomePreservesCheckStatus()
     {
         var game = CreateCheckAtThresholdGame();
 
@@ -181,12 +240,16 @@ public sealed class AutomaticDrawStatusTests
         var status = TestSupport
             .CreateStatusEvaluator(game.Variant)
             .Evaluate(game.State);
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.True(checkDetector.IsInCheck(game.State, SideDefinitions.Black));
         Assert.NotEmpty(TestSupport.AllMoves(game));
-        Assert.Equal(StatusDefinitions.SeventyFiveMoveRule, status.Id);
+        Assert.Equal(StatusDefinitions.Check, status.Id);
+        Assert.Equal(
+            TerminationDefinitions.SeventyFiveMoveRule,
+            outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
     }
 
     [Fact]
@@ -205,14 +268,16 @@ public sealed class AutomaticDrawStatusTests
         var status = TestSupport
             .CreateStatusEvaluator(game.Variant)
             .Evaluate(game.State);
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.Equal(
             150,
             HalfmoveFacts(game)
                 .HalfmoveClock);
         Assert.Equal(StatusDefinitions.Checkmate, status.Id);
+        Assert.Equal(TerminationDefinitions.Checkmate, outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Equal([SideDefinitions.White], status.Winners);
+        Assert.Equal([SideDefinitions.White], outcome.Winners);
     }
 
     [Fact]
@@ -231,14 +296,16 @@ public sealed class AutomaticDrawStatusTests
         var status = TestSupport
             .CreateStatusEvaluator(game.Variant)
             .Evaluate(game.State);
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.Equal(
             150,
             HalfmoveFacts(game)
                 .HalfmoveClock);
         Assert.Equal(StatusDefinitions.Stalemate, status.Id);
+        Assert.Equal(TerminationDefinitions.Stalemate, outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
     }
 
     [Fact]

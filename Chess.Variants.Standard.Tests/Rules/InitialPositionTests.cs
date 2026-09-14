@@ -102,18 +102,17 @@ public sealed class InitialPositionTests
                     placement.Side,
                     placement.Definition))
                 .ToArray());
+        var productionStatus = productionGame.Status;
+        var testStatus = testGame.Status;
 
         Assert.Same(
             productionGame.State.CurrentSide,
             testGame.State.CurrentSide);
-        Assert.Equal(productionGame.Status.Id, testGame.Status.Id);
-        Assert.Equal(
-            productionGame.Status.IsTerminal,
-            testGame.Status.IsTerminal);
-        Assert.Empty(
-            productionGame.Status.Winners.Except(testGame.Status.Winners));
-        Assert.Empty(
-            testGame.Status.Winners.Except(productionGame.Status.Winners));
+        Assert.Equal(productionStatus.Id, testStatus.Id);
+        Assert.False(productionStatus.IsTerminal);
+        Assert.False(testStatus.IsTerminal);
+        Assert.Null(productionStatus.Outcome);
+        Assert.Null(testStatus.Outcome);
 
         foreach (var square in productionGame.BoardState.Topology.Squares)
         {

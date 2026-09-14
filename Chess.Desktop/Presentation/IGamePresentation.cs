@@ -17,6 +17,9 @@ public interface IGamePresentation
     string GetStatusName(
         GameStatusId statusId);
 
+    string GetTerminationName(
+        GameTerminationId terminationId);
+
     string GetPieceImageSource(
         Piece piece);
 }

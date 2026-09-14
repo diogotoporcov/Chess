@@ -52,22 +52,25 @@ public sealed class StatusEvaluator : IGameStatusEvaluator
             {
                 return new GameStatus(
                     StatusDefinitions.Stalemate,
-                    isTerminal: true);
+                    new GameOutcome(TerminationDefinitions.Stalemate));
             }
 
             var winner = FindWinningSide(gameState, currentSide);
 
             return new GameStatus(
                 StatusDefinitions.Checkmate,
-                isTerminal: true,
-                winner);
+                new GameOutcome(TerminationDefinitions.Checkmate, winner));
         }
+
+        var statusId = isInCheck
+            ? StatusDefinitions.Check
+            : StatusDefinitions.Active;
 
         if (InsufficientMatingMaterialDetector.IsInsufficient(gameState))
         {
             return new GameStatus(
-                StatusDefinitions.DeadPosition,
-                isTerminal: true);
+                statusId,
+                new GameOutcome(TerminationDefinitions.DeadPosition));
         }
 
         var halfmoveFacts = _halfmoveRuleEvaluator.Evaluate(gameState);
@@ -75,20 +78,18 @@ public sealed class StatusEvaluator : IGameStatusEvaluator
         if (halfmoveFacts.IsSeventyFiveMoveThresholdReached)
         {
             return new GameStatus(
-                StatusDefinitions.SeventyFiveMoveRule,
-                isTerminal: true);
+                statusId,
+                new GameOutcome(TerminationDefinitions.SeventyFiveMoveRule));
         }
 
         if (_repetitionEvaluator.HasFivefoldRepetition(gameState))
         {
             return new GameStatus(
-                StatusDefinitions.FivefoldRepetition,
-                isTerminal: true);
+                statusId,
+                new GameOutcome(TerminationDefinitions.FivefoldRepetition));
         }
 
-        return new GameStatus(
-            isInCheck ? StatusDefinitions.Check : StatusDefinitions.Active,
-            isTerminal: false);
+        return new GameStatus(statusId);
     }
 
     private bool HasLegalMove(

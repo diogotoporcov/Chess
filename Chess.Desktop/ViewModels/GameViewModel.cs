@@ -33,7 +33,7 @@ public sealed class GameViewModel : ViewModelBase
     public string CurrentTurn =>
         _mode.Presentation.GetSideName(_game.State.CurrentSide);
 
-    public string Status => _mode.Presentation.GetStatusName(_game.Status.Id);
+    public string Status => GetStatusText();
 
     public ICommand SelectSquareCommand { get; }
 
@@ -166,5 +166,14 @@ public sealed class GameViewModel : ViewModelBase
 
             square.IsCaptureDestination = isLegalDestination && isOccupied;
         }
+    }
+
+    private string GetStatusText()
+    {
+        var status = _game.Status;
+
+        return status.Outcome is { } outcome
+            ? _mode.Presentation.GetTerminationName(outcome.Termination)
+            : _mode.Presentation.GetStatusName(status.Id);
     }
 }

@@ -3,6 +3,7 @@
 
 using Chess.Core.Games;
 using Chess.Core.Games.Attacks;
+using Chess.Core.Games.Status;
 using Chess.Core.Movement;
 using Chess.Core.Pieces;
 using Chess.Core.Sides;
@@ -50,6 +51,7 @@ public sealed class CheckAndStatusTests
 
         Assert.Equal(StatusDefinitions.Check, game.Status.Id);
         Assert.False(game.Status.IsTerminal);
+        Assert.Null(game.Status.Outcome);
     }
 
     [Fact]
@@ -138,7 +140,7 @@ public sealed class CheckAndStatusTests
 
         Assert.Equal(StatusDefinitions.Active, status.Id);
         Assert.False(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Null(status.Outcome);
     }
 
     [Fact]
@@ -146,10 +148,12 @@ public sealed class CheckAndStatusTests
     {
         var game = CreateFoolsMate();
         var status = game.Status;
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.Equal(StatusDefinitions.Checkmate, status.Id);
+        Assert.Equal(TerminationDefinitions.Checkmate, outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Equal([SideDefinitions.Black], status.Winners);
+        Assert.Equal([SideDefinitions.Black], outcome.Winners);
         Assert.Empty(TestSupport.AllMoves(game));
         Assert.Throws<InvalidOperationException>(() =>
             game.Execute(Move("e2", "e3")));
@@ -167,10 +171,12 @@ public sealed class CheckAndStatusTests
                 SideDefinitions.White,
                 PieceDefinitions.Queen));
         var status = game.Status;
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.Equal(StatusDefinitions.Stalemate, status.Id);
+        Assert.Equal(TerminationDefinitions.Stalemate, outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
         Assert.Empty(TestSupport.AllMoves(game));
     }
 

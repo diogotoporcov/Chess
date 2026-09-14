@@ -368,6 +368,6 @@ internal sealed class NonTerminatingStatusEvaluator : IGameStatusEvaluator
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        return new GameStatus(StatusDefinitions.Active, isTerminal: false);
+        return new GameStatus(StatusDefinitions.Active);
     }
 }

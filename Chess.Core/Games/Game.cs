@@ -24,6 +24,8 @@ public sealed class Game
 
     public GameStatus Status => _statusEvaluator.Evaluate(State);
 
+    public GameOutcome? Outcome => Status.Outcome;
+
     internal Game(
         GameVariantDefinition variant,
         GameState state,

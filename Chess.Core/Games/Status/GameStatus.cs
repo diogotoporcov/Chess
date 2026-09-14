@@ -1,50 +1,23 @@
 // SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using System.Collections.ObjectModel;
-using Chess.Core.Sides;
-
 namespace Chess.Core.Games.Status;
 
 public sealed class GameStatus
 {
-    private readonly ReadOnlyCollection<Side> _winners;
-
     public GameStatusId Id { get; }
 
-    public bool IsTerminal { get; }
+    public GameOutcome? Outcome { get; }
 
-    public IReadOnlyList<Side> Winners => _winners;
+    public bool IsTerminal => Outcome is not null;
 
     public GameStatus(
         GameStatusId id,
-        bool isTerminal,
-        params Side[] winners)
+        GameOutcome? outcome = null)
     {
         ArgumentNullException.ThrowIfNull(id);
-        ArgumentNullException.ThrowIfNull(winners);
-
-        if (!isTerminal &&
-            winners.Length > 0)
-        {
-            throw new ArgumentException(
-                "A non-terminal game status cannot declare winners.",
-                nameof(winners));
-        }
-
-        if (winners
-                .Distinct()
-                .Count() !=
-            winners.Length)
-        {
-            throw new ArgumentException(
-                "A game status cannot contain the same winner more than once.",
-                nameof(winners));
-        }
 
         Id = id;
-        IsTerminal = isTerminal;
-
-        _winners = Array.AsReadOnly([.. winners]);
+        Outcome = outcome;
     }
 }

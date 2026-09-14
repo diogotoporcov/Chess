@@ -3,6 +3,7 @@
 
 using Chess.Core.Games;
 using Chess.Core.Games.Attacks;
+using Chess.Core.Games.Status;
 using Chess.Variants.Standard.Games;
 using Chess.Variants.Standard.Games.Rules;
 using Chess.Variants.Standard.Pieces;
@@ -332,21 +333,23 @@ public sealed class InsufficientMatingMaterialTests
                 PieceDefinitions.Knight));
         var before = StandardGameSnapshot.Capture(game);
 
-        Assert.NotEqual(StatusDefinitions.DeadPosition, game.Status.Id);
+        Assert.Null(game.Status.Outcome);
         Assert.False(game.Status.IsTerminal);
 
         TestSupport.Play(game, "c3", "d4");
 
         var status = game.Status;
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
-        Assert.Equal(StatusDefinitions.DeadPosition, status.Id);
+        Assert.Equal(StatusDefinitions.Active, status.Id);
+        Assert.Equal(TerminationDefinitions.DeadPosition, outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
 
         game.UndoLastMove();
 
         before.AssertMatches(game);
-        Assert.NotEqual(StatusDefinitions.DeadPosition, game.Status.Id);
+        Assert.Null(game.Status.Outcome);
         Assert.False(game.Status.IsTerminal);
     }
 
@@ -362,16 +365,18 @@ public sealed class InsufficientMatingMaterialTests
             TestSupport.At("e8", SideDefinitions.Black, PieceDefinitions.King));
         var otherwiseLegalMove = TestSupport.FindMove(game, "e1", "d1");
         var status = game.Status;
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
-        Assert.Equal(StatusDefinitions.DeadPosition, status.Id);
+        Assert.Equal(StatusDefinitions.Active, status.Id);
+        Assert.Equal(TerminationDefinitions.DeadPosition, outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
         Assert.Throws<InvalidOperationException>(() =>
             game.Execute(otherwiseLegalMove));
     }
 
     [Fact]
-    public void DeadPositionPrecedesNonTerminalCheck()
+    public void DeadPositionOutcomePreservesCheckStatus()
     {
         var game = TestSupport.CreateGame(
             new TurnOrder(SideDefinitions.Black, SideDefinitions.White),
@@ -383,14 +388,16 @@ public sealed class InsufficientMatingMaterialTests
             TestSupport.At("h8", SideDefinitions.Black, PieceDefinitions.King));
         var checkDetector = new CheckDetector(new PatternAttackGenerator());
         var status = game.Status;
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.True(checkDetector.IsInCheck(game.State, SideDefinitions.Black));
         Assert.NotEmpty(TestSupport.AllMoves(game));
         Assert.True(
             InsufficientMatingMaterialDetector.IsInsufficient(game.State));
-        Assert.Equal(StatusDefinitions.DeadPosition, status.Id);
+        Assert.Equal(StatusDefinitions.Check, status.Id);
+        Assert.Equal(TerminationDefinitions.DeadPosition, outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
     }
 
     [Fact]
@@ -405,13 +412,15 @@ public sealed class InsufficientMatingMaterialTests
                 SideDefinitions.White,
                 PieceDefinitions.Bishop));
         var status = game.Status;
+        var outcome = Assert.IsType<GameOutcome>(status.Outcome);
 
         Assert.True(
             InsufficientMatingMaterialDetector.IsInsufficient(game.State));
         Assert.Empty(TestSupport.AllMoves(game));
         Assert.Equal(StatusDefinitions.Stalemate, status.Id);
+        Assert.Equal(TerminationDefinitions.Stalemate, outcome.Termination);
         Assert.True(status.IsTerminal);
-        Assert.Empty(status.Winners);
+        Assert.Empty(outcome.Winners);
     }
 
     [Fact]

@@ -290,8 +290,9 @@ public sealed class TurnOrderAndGameExecutionTests
             new FixedStatusEvaluator(
                 new GameStatus(
                     new GameStatusId("test:over"),
-                    isTerminal: true,
-                    TestSupport.Black)),
+                    new GameOutcome(
+                        new GameTerminationId("test:finished"),
+                        TestSupport.Black))),
             new InitialPiecePlacement(
                 from,
                 TestSupport.White,
@@ -299,24 +300,15 @@ public sealed class TurnOrderAndGameExecutionTests
         var game = variant.CreateGame();
 
         Assert.True(game.Status.IsTerminal);
+        Assert.NotNull(game.Outcome);
         Assert.Throws<InvalidOperationException>(() => game.Execute(move));
         Assert.True(game.BoardState.IsOccupied(from));
         Assert.Empty(game.State.History);
     }
 
     [Fact]
-    public void ImportantStatusAndVariantInvariantsAreValidated()
+    public void ImportantVariantInvariantsAreValidated()
     {
-        Assert.Throws<ArgumentException>(() => new GameStatus(
-            new GameStatusId("test:active"),
-            isTerminal: false,
-            TestSupport.White));
-        Assert.Throws<ArgumentException>(() => new GameStatus(
-            new GameStatusId("test:won"),
-            isTerminal: true,
-            TestSupport.White,
-            TestSupport.White));
-
         var topology = TestSupport.CreateGrid(1, 1);
         var square = TestSupport.At(0, 0, 1);
         var placement = new InitialPiecePlacement(
@@ -370,9 +362,7 @@ public sealed class TurnOrderAndGameExecutionTests
             new FixedMoveGenerator(),
             new BasicMoveExecutionResolver(),
             new FixedStatusEvaluator(
-                new GameStatus(
-                    new GameStatusId("test:active"),
-                    isTerminal: false)),
+                new GameStatus(new GameStatusId("test:active"))),
             placements);
     }
 

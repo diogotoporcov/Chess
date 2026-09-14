@@ -76,6 +76,14 @@ public sealed class StandardChessPresentation : IGamePresentation
         return FormatIdentifier(statusId.Value);
     }
 
+    public string GetTerminationName(
+        GameTerminationId terminationId)
+    {
+        ArgumentNullException.ThrowIfNull(terminationId);
+
+        return FormatIdentifier(terminationId.Value);
+    }
+
     public string GetPieceImageSource(
         Piece piece)
     {
