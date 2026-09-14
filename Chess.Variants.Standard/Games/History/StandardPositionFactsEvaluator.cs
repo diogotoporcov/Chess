@@ -3,9 +3,7 @@
 
 using Chess.Core.Board;
 using Chess.Core.Games;
-using Chess.Core.Movement;
 using Chess.Variants.Standard.Movement;
-using Chess.Variants.Standard.Pieces;
 
 namespace Chess.Variants.Standard.Games.History;
 
@@ -26,23 +24,25 @@ public sealed class StandardPositionFactsEvaluator
     {
         ArgumentNullException.ThrowIfNull(gameState);
 
-        var castlingRights = CastlingRightsEvaluator.Evaluate(gameState);
-        var effectiveEnPassantTarget =
-            EvaluateEffectiveEnPassantTarget(gameState);
-        var key = new StandardPositionKey(
-            EvaluatePiecePlacements(gameState),
-            gameState.CurrentSide.Id,
-            castlingRights,
-            effectiveEnPassantTarget);
-
-        return new StandardPositionFacts(key, EvaluateHalfmoveClock(gameState));
+        return new StandardPositionFacts(
+            CreatePositionKey(gameState),
+            EvaluateHalfmoveClock(gameState));
     }
 
     public StandardPositionKey CreatePositionKey(
         GameState gameState)
     {
-        return Evaluate(gameState)
-            .PositionKey;
+        ArgumentNullException.ThrowIfNull(gameState);
+
+        var castlingRights = CastlingRightsEvaluator.Evaluate(gameState);
+        var effectiveEnPassantTarget =
+            EvaluateEffectiveEnPassantTarget(gameState);
+
+        return new StandardPositionKey(
+            EvaluatePiecePlacements(gameState),
+            gameState.CurrentSide.Id,
+            castlingRights,
+            effectiveEnPassantTarget);
     }
 
     public int EvaluateHalfmoveClock(
@@ -55,10 +55,8 @@ public sealed class StandardPositionFactsEvaluator
         for (var index = gameState.History.Count - 1; index >= 0; index--)
         {
             var execution = gameState.History[index].Execution;
-            var isPawnMove = IsPawnMove(execution);
-            var isCapture = IsCapture(execution);
 
-            if (isPawnMove || isCapture)
+            if (StandardHalfmoveRules.ResetsClock(execution))
             {
                 break;
             }
@@ -114,46 +112,5 @@ public sealed class StandardPositionFactsEvaluator
                 "A standard position cannot have multiple en passant " +
                 "target squares.")
         };
-    }
-
-    private static bool IsPawnMove(
-        MoveExecution execution)
-    {
-        var originChange =
-            execution.Transition.Changes.SingleOrDefault(change =>
-                change.Square == execution.Move.From);
-
-        if (originChange?.Before is null)
-        {
-            throw new InvalidOperationException(
-                "Move execution does not identify the moving piece " +
-                "at its origin.");
-        }
-
-        return originChange.Before.Definition.Id == PieceDefinitions.Pawn.Id;
-    }
-
-    private static bool IsCapture(
-        MoveExecution execution)
-    {
-        foreach (var change in execution.Transition.Changes)
-        {
-            if (change.Square == execution.Move.From ||
-                change.Before is null)
-            {
-                continue;
-            }
-
-            var pieceRemainsOnBoard =
-                execution.Transition.Changes.Any(destination =>
-                    ReferenceEquals(destination.After, change.Before));
-
-            if (!pieceRemainsOnBoard)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

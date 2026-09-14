@@ -38,6 +38,9 @@ public static class Variant
     public static StandardRepetitionEvaluator RepetitionEvaluator =>
         Components.Repetition;
 
+    public static StandardHalfmoveRuleEvaluator HalfmoveRuleEvaluator =>
+        Components.HalfmoveRules;
+
     public static Game CreateGame()
     {
         return Definition.CreateGame();
@@ -87,12 +90,20 @@ public static class Variant
         var factsEvaluator = new StandardPositionFactsEvaluator(
             legalMoveGenerator);
 
+        var repetitionEvaluator = new StandardRepetitionEvaluator(
+            factsEvaluator,
+            definition.CreateGame);
+
+        var halfmoveRuleEvaluator = new StandardHalfmoveRuleEvaluator(
+            factsEvaluator,
+            legalMoveGenerator,
+            executionResolver);
+
         return new VariantComponents(
             definition,
             factsEvaluator,
-            new StandardRepetitionEvaluator(
-                factsEvaluator,
-                definition.CreateGame));
+            repetitionEvaluator,
+            halfmoveRuleEvaluator);
     }
 
     private static InitialPiecePlacement[] CreateInitialPlacements()
@@ -151,5 +162,6 @@ public static class Variant
     private sealed record VariantComponents(
         GameVariantDefinition VariantDefinition,
         StandardPositionFactsEvaluator FactsEvaluator,
-        StandardRepetitionEvaluator Repetition);
+        StandardRepetitionEvaluator Repetition,
+        StandardHalfmoveRuleEvaluator HalfmoveRules);
 }

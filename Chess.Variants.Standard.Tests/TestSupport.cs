@@ -4,6 +4,7 @@
 using Chess.Core.Board;
 using Chess.Core.Games;
 using Chess.Core.Games.Attacks;
+using Chess.Core.Games.Status;
 using Chess.Core.Games.Variants;
 using Chess.Core.Movement;
 using Chess.Core.Pieces;
@@ -63,8 +64,29 @@ internal static class TestSupport
             .CreateGame();
     }
 
+    public static Game CreateNonTerminatingGame(
+        params Placement[] placements)
+    {
+        return CreateDefinition(
+                new TurnOrder(SideDefinitions.White, SideDefinitions.Black),
+                isStatusEvaluationEnabled: false,
+                placements)
+            .CreateGame();
+    }
+
     public static GameVariantDefinition CreateDefinition(
         TurnOrder turnOrder,
+        params Placement[] placements)
+    {
+        return CreateDefinition(
+            turnOrder,
+            isStatusEvaluationEnabled: true,
+            placements);
+    }
+
+    private static GameVariantDefinition CreateDefinition(
+        TurnOrder turnOrder,
+        bool isStatusEvaluationEnabled,
         params Placement[] placements)
     {
         var executionResolver = CreateExecutionResolver();
@@ -80,6 +102,10 @@ internal static class TestSupport
             simulator,
             checkDetector);
 
+        IGameStatusEvaluator statusEvaluator = isStatusEvaluationEnabled
+            ? new StatusEvaluator(legalGenerator, checkDetector)
+            : new NonTerminatingStatusEvaluator();
+
         return new GameVariantDefinition(
             new GameVariantId("test:standard-position"),
             "Standard test position",
@@ -89,7 +115,7 @@ internal static class TestSupport
             BoardRegions.Resolver,
             legalGenerator,
             executionResolver,
-            new StatusEvaluator(legalGenerator, checkDetector),
+            statusEvaluator,
             placements
                 .Select(placement => new InitialPiecePlacement(
                     placement.Square,
@@ -155,6 +181,7 @@ internal readonly record struct Placement(
 
 internal sealed record StandardGameSnapshot(
     Side CurrentSide,
+    GameMoveRecord? LastMove,
     IReadOnlyList<GameMoveRecord> History,
     IReadOnlyDictionary<Square, Piece> Pieces)
 {
@@ -176,6 +203,7 @@ internal sealed record StandardGameSnapshot(
 
         return new StandardGameSnapshot(
             game.State.CurrentSide,
+            game.State.LastMove,
             game.State.History.ToArray(),
             pieces);
     }
@@ -184,6 +212,7 @@ internal sealed record StandardGameSnapshot(
         Game game)
     {
         Assert.Equal(CurrentSide, game.State.CurrentSide);
+        Assert.Same(LastMove, game.State.LastMove);
         Assert.Equal(History.Count, game.State.History.Count);
 
         for (var index = 0; index < History.Count; index++)
@@ -208,5 +237,16 @@ internal sealed record StandardGameSnapshot(
                 Assert.Equal(square, at);
             }
         }
+    }
+}
+
+internal sealed class NonTerminatingStatusEvaluator : IGameStatusEvaluator
+{
+    public GameStatus Evaluate(
+        GameState gameState)
+    {
+        ArgumentNullException.ThrowIfNull(gameState);
+
+        return new GameStatus(StatusDefinitions.Active, isTerminal: false);
     }
 }
