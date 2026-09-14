@@ -288,6 +288,96 @@ public sealed class StandardRepetitionEvaluatorTests
     }
 
     [Fact]
+    public void RepeatedEvaluationProcessesOnlyChangedHistory()
+    {
+        var game = Variant.CreateGame();
+        var (evaluator, replayResolver) = CreateCountingEvaluator(game.Variant);
+
+        PlayInitialPositionCycle(game);
+
+        _ = evaluator.Evaluate(game.State);
+
+        Assert.Equal(4, replayResolver.ResolveCount);
+
+        _ = evaluator.Evaluate(game.State);
+
+        Assert.Equal(4, replayResolver.ResolveCount);
+
+        TestSupport.Play(game, "b1", "c3");
+        _ = evaluator.Evaluate(game.State);
+
+        Assert.Equal(5, replayResolver.ResolveCount);
+
+        game.UndoLastMove();
+        _ = evaluator.Evaluate(game.State);
+
+        Assert.Equal(5, replayResolver.ResolveCount);
+
+        TestSupport.Play(game, "b1", "a3");
+        _ = evaluator.Evaluate(game.State);
+
+        Assert.Equal(6, replayResolver.ResolveCount);
+    }
+
+    [Fact]
+    public void ProspectiveEvaluationReusesAndRestoresTrackedState()
+    {
+        var game = Variant.CreateGame();
+        var (evaluator, replayResolver) = CreateCountingEvaluator(game.Variant);
+
+        PlayInitialPositionCycle(game);
+        TestSupport.Play(game, "g1", "f3");
+        TestSupport.Play(game, "g8", "f6");
+        TestSupport.Play(game, "f3", "g1");
+
+        var snapshot = StandardGameSnapshot.Capture(game);
+
+        _ = evaluator.Evaluate(game.State);
+
+        Assert.Equal(7, replayResolver.ResolveCount);
+
+        var candidate = TestSupport.FindMove(game, "f6", "g8");
+
+        Assert.True(
+            evaluator.WouldCreateThreefoldRepetition(game.State, candidate));
+        Assert.Equal(8, replayResolver.ResolveCount);
+
+        _ = evaluator.Evaluate(game.State);
+
+        Assert.Equal(8, replayResolver.ResolveCount);
+        snapshot.AssertMatches(game);
+    }
+
+    [Fact]
+    public void TrackersAreIsolatedForIndependentGameStates()
+    {
+        var firstGame = Variant.CreateGame();
+        var secondGame = Variant.CreateGame();
+        var (evaluator, replayResolver) = CreateCountingEvaluator(
+            firstGame.Variant);
+
+        TestSupport.Play(firstGame, "g1", "f3");
+        TestSupport.Play(secondGame, "g1", "f3");
+        TestSupport.Play(secondGame, "g8", "f6");
+
+        Assert.Equal(
+            1,
+            evaluator.Evaluate(firstGame.State)
+                .CurrentPositionOccurrences);
+        Assert.Equal(1, replayResolver.ResolveCount);
+
+        Assert.Equal(
+            1,
+            evaluator.Evaluate(secondGame.State)
+                .CurrentPositionOccurrences);
+        Assert.Equal(3, replayResolver.ResolveCount);
+
+        _ = evaluator.Evaluate(firstGame.State);
+
+        Assert.Equal(3, replayResolver.ResolveCount);
+    }
+
+    [Fact]
     public void UndoAndReexecuteNaturallyChangeRepetitionFacts()
     {
         var game = Variant.CreateGame();
@@ -335,6 +425,27 @@ public sealed class StandardRepetitionEvaluatorTests
             new GameMoveExecutor(moveResolver));
     }
 
+    private static ( StandardRepetitionEvaluator Evaluator,
+        CountingMoveExecutionResolver ReplayResolver) CreateCountingEvaluator(
+            GameVariantDefinition definition)
+    {
+        var executionResolver = TestSupport.CreateExecutionResolver();
+        var legalMoveGenerator =
+            TestSupport.CreateLegalMoveGenerator(executionResolver);
+        var replayResolver = new CountingMoveExecutionResolver(
+            executionResolver);
+        var moveResolver = new GameMoveResolver(
+            legalMoveGenerator,
+            replayResolver);
+        var gameStateFactory = TestSupport.CreateGameStateFactory(definition);
+        var evaluator = new StandardRepetitionEvaluator(
+            new StandardPositionFactsEvaluator(legalMoveGenerator),
+            gameStateFactory.Create,
+            new GameMoveExecutor(moveResolver));
+
+        return (evaluator, replayResolver);
+    }
+
     private static void PlayInitialPositionCycle(
         Game game)
     {
@@ -342,5 +453,26 @@ public sealed class StandardRepetitionEvaluatorTests
         TestSupport.Play(game, "g8", "f6");
         TestSupport.Play(game, "f3", "g1");
         TestSupport.Play(game, "f6", "g8");
+    }
+
+    private sealed class CountingMoveExecutionResolver(
+        IMoveExecutionResolver inner) : IMoveExecutionResolver
+    {
+        public int ResolveCount { get; private set; }
+
+        public bool CanResolve(
+            Move move)
+        {
+            return inner.CanResolve(move);
+        }
+
+        public MoveExecution Resolve(
+            GameState gameState,
+            Move move)
+        {
+            ResolveCount++;
+
+            return inner.Resolve(gameState, move);
+        }
     }
 }

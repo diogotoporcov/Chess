@@ -13,6 +13,7 @@ using Chess.Variants.Standard.Board;
 using Chess.Variants.Standard.Board.Regions;
 using Chess.Variants.Standard.Board.Topology;
 using Chess.Variants.Standard.Games;
+using Chess.Variants.Standard.Games.History;
 using Chess.Variants.Standard.Games.Rules;
 using Chess.Variants.Standard.Movement;
 using Chess.Variants.Standard.Movement.Orientation;
@@ -67,8 +68,17 @@ internal static class TestSupport
     public static Game CreateNonTerminatingGame(
         params Placement[] placements)
     {
+        return CreateNonTerminatingGame(
+            new TurnOrder(SideDefinitions.White, SideDefinitions.Black),
+            placements);
+    }
+
+    public static Game CreateNonTerminatingGame(
+        TurnOrder turnOrder,
+        params Placement[] placements)
+    {
         return CreateDefinition(
-                new TurnOrder(SideDefinitions.White, SideDefinitions.Black),
+                turnOrder,
                 isStatusEvaluationEnabled: false,
                 placements)
             .CreateGame();
@@ -93,17 +103,21 @@ internal static class TestSupport
         var simulator = new GameMoveSimulator(executionResolver);
         var checkDetector = new CheckDetector(new PatternAttackGenerator());
         var legalGenerator = CreateLegalMoveGenerator(simulator, checkDetector);
+        var gameStateFactory = CreateGameStateFactory(turnOrder, placements);
 
         IGameStatusEvaluator statusEvaluator = isStatusEvaluationEnabled
-            ? new StatusEvaluator(legalGenerator, checkDetector)
+            ? CreateStatusEvaluator(
+                gameStateFactory,
+                legalGenerator,
+                executionResolver,
+                checkDetector)
             : new NonTerminatingStatusEvaluator();
 
         return CreateDefinition(
-            turnOrder,
+            gameStateFactory,
             legalGenerator,
             executionResolver,
-            statusEvaluator,
-            placements);
+            statusEvaluator);
     }
 
     public static GameVariantDefinition CreateDefinition(
@@ -195,6 +209,49 @@ internal static class TestSupport
             new PromotionMoveExecutionResolver(),
             new EnPassantMoveExecutionResolver(),
             new CastlingMoveExecutionResolver());
+    }
+
+    public static StatusEvaluator CreateStatusEvaluator(
+        GameVariantDefinition definition)
+    {
+        var executionResolver = CreateExecutionResolver();
+        var simulator = new GameMoveSimulator(executionResolver);
+        var checkDetector = new CheckDetector(new PatternAttackGenerator());
+        var legalMoveGenerator = CreateLegalMoveGenerator(
+            simulator,
+            checkDetector);
+
+        return CreateStatusEvaluator(
+            CreateGameStateFactory(definition),
+            legalMoveGenerator,
+            executionResolver,
+            checkDetector);
+    }
+
+    public static StatusEvaluator CreateStatusEvaluator(
+        GameStateFactory gameStateFactory,
+        IGameMoveGenerator legalMoveGenerator,
+        IMoveExecutionResolver executionResolver,
+        CheckDetector checkDetector)
+    {
+        var moveResolver = new GameMoveResolver(
+            legalMoveGenerator,
+            executionResolver);
+        var positionFactsEvaluator = new StandardPositionFactsEvaluator(
+            legalMoveGenerator);
+        var repetitionEvaluator = new StandardRepetitionEvaluator(
+            positionFactsEvaluator,
+            gameStateFactory.Create,
+            new GameMoveExecutor(moveResolver));
+        var halfmoveRuleEvaluator = new StandardHalfmoveRuleEvaluator(
+            positionFactsEvaluator,
+            moveResolver);
+
+        return new StatusEvaluator(
+            legalMoveGenerator,
+            checkDetector,
+            repetitionEvaluator,
+            halfmoveRuleEvaluator);
     }
 
     public static Move FindMove(

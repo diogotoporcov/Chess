@@ -4,6 +4,7 @@
 using Chess.Core.Games;
 using Chess.Core.Games.Status;
 using Chess.Core.Sides;
+using Chess.Variants.Standard.Games.History;
 
 namespace Chess.Variants.Standard.Games.Rules;
 
@@ -13,16 +14,25 @@ public sealed class StatusEvaluator : IGameStatusEvaluator
 
     private readonly CheckDetector _checkDetector;
 
+    private readonly StandardRepetitionEvaluator _repetitionEvaluator;
+
+    private readonly StandardHalfmoveRuleEvaluator _halfmoveRuleEvaluator;
+
     public StatusEvaluator(
         IGameMoveGenerator legalMoveGenerator,
-        CheckDetector checkDetector)
+        CheckDetector checkDetector,
+        StandardRepetitionEvaluator repetitionEvaluator,
+        StandardHalfmoveRuleEvaluator halfmoveRuleEvaluator)
     {
         ArgumentNullException.ThrowIfNull(legalMoveGenerator);
         ArgumentNullException.ThrowIfNull(checkDetector);
+        ArgumentNullException.ThrowIfNull(repetitionEvaluator);
+        ArgumentNullException.ThrowIfNull(halfmoveRuleEvaluator);
 
         _legalMoveGenerator = legalMoveGenerator;
-
         _checkDetector = checkDetector;
+        _repetitionEvaluator = repetitionEvaluator;
+        _halfmoveRuleEvaluator = halfmoveRuleEvaluator;
     }
 
     public GameStatus Evaluate(
@@ -36,26 +46,42 @@ public sealed class StatusEvaluator : IGameStatusEvaluator
 
         var hasLegalMove = HasLegalMove(gameState, currentSide);
 
-        if (hasLegalMove)
+        if (!hasLegalMove)
         {
+            if (!isInCheck)
+            {
+                return new GameStatus(
+                    StatusDefinitions.Stalemate,
+                    isTerminal: true);
+            }
+
+            var winner = FindWinningSide(gameState, currentSide);
+
             return new GameStatus(
-                isInCheck ? StatusDefinitions.Check : StatusDefinitions.Active,
-                isTerminal: false);
+                StatusDefinitions.Checkmate,
+                isTerminal: true,
+                winner);
         }
 
-        if (!isInCheck)
+        var halfmoveFacts = _halfmoveRuleEvaluator.Evaluate(gameState);
+
+        if (halfmoveFacts.IsSeventyFiveMoveThresholdReached)
         {
             return new GameStatus(
-                StatusDefinitions.Stalemate,
+                StatusDefinitions.SeventyFiveMoveRule,
                 isTerminal: true);
         }
 
-        var winner = FindWinningSide(gameState, currentSide);
+        if (_repetitionEvaluator.HasFivefoldRepetition(gameState))
+        {
+            return new GameStatus(
+                StatusDefinitions.FivefoldRepetition,
+                isTerminal: true);
+        }
 
         return new GameStatus(
-            StatusDefinitions.Checkmate,
-            isTerminal: true,
-            winner);
+            isInCheck ? StatusDefinitions.Check : StatusDefinitions.Active,
+            isTerminal: false);
     }
 
     private bool HasLegalMove(

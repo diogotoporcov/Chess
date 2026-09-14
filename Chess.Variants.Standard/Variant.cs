@@ -98,7 +98,9 @@ public static class Variant
 
         var statusEvaluator = new StatusEvaluator(
             legalMoveGenerator,
-            checkDetector);
+            checkDetector,
+            repetitionEvaluator,
+            halfmoveRuleEvaluator);
 
         var definition = new GameVariantDefinition(
             new GameVariantId("chess:standard"),

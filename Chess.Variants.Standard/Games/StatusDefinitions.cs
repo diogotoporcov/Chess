@@ -14,4 +14,10 @@ public static class StatusDefinitions
     public static GameStatusId Checkmate { get; } = new("chess:checkmate");
 
     public static GameStatusId Stalemate { get; } = new("chess:stalemate");
+
+    public static GameStatusId FivefoldRepetition { get; } =
+        new("chess:fivefold-repetition");
+
+    public static GameStatusId SeventyFiveMoveRule { get; } =
+        new("chess:seventy-five-move-rule");
 }
