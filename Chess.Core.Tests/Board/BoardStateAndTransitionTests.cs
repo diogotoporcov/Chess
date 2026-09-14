@@ -102,8 +102,9 @@ public sealed class BoardStateAndTransitionTests
             (to, captured));
         var before = GameStateSnapshot.Capture(state);
         var executor = new GameMoveExecutor(
-            new FixedMoveGenerator(move),
-            new BasicMoveExecutionResolver());
+            new GameMoveResolver(
+                new FixedMoveGenerator(move),
+                new BasicMoveExecutionResolver()));
 
         var record = executor.Execute(state, move);
 
@@ -142,9 +143,10 @@ public sealed class BoardStateAndTransitionTests
             (squares[3], second));
         var before = GameStateSnapshot.Capture(state);
         var executor = new GameMoveExecutor(
-            new FixedMoveGenerator(move),
-            new DelegateResolver((_, _) =>
-                new MoveExecution(move, transition)));
+            new GameMoveResolver(
+                new FixedMoveGenerator(move),
+                new DelegateResolver((_, _) =>
+                    new MoveExecution(move, transition))));
 
         executor.Execute(state, move);
 
@@ -170,9 +172,10 @@ public sealed class BoardStateAndTransitionTests
             new BoardSquareChange(from, stale, null),
             new BoardSquareChange(to, null, stale));
         var executor = new GameMoveExecutor(
-            new FixedMoveGenerator(move),
-            new DelegateResolver((_, _) =>
-                new MoveExecution(move, transition)));
+            new GameMoveResolver(
+                new FixedMoveGenerator(move),
+                new DelegateResolver((_, _) =>
+                    new MoveExecution(move, transition))));
 
         Assert.Throws<InvalidOperationException>(() =>
             executor.Execute(state, move));
@@ -194,9 +197,10 @@ public sealed class BoardStateAndTransitionTests
             new BoardSquareChange(middle, null, piece),
             new BoardSquareChange(to, null, piece));
         var executor = new GameMoveExecutor(
-            new FixedMoveGenerator(move),
-            new DelegateResolver((_, _) =>
-                new MoveExecution(move, transition)));
+            new GameMoveResolver(
+                new FixedMoveGenerator(move),
+                new DelegateResolver((_, _) =>
+                    new MoveExecution(move, transition))));
 
         Assert.Throws<InvalidOperationException>(() =>
             executor.Execute(state, move));
@@ -221,9 +225,10 @@ public sealed class BoardStateAndTransitionTests
             new BoardSquareChange(from, moving, null),
             new BoardSquareChange(to, null, alreadyPlaced));
         var executor = new GameMoveExecutor(
-            new FixedMoveGenerator(move),
-            new DelegateResolver((_, _) =>
-                new MoveExecution(move, transition)));
+            new GameMoveResolver(
+                new FixedMoveGenerator(move),
+                new DelegateResolver((_, _) =>
+                    new MoveExecution(move, transition))));
 
         Assert.Throws<InvalidOperationException>(() =>
             executor.Execute(state, move));

@@ -1,27 +1,21 @@
 // SPDX-FileCopyrightText: 2026 Diogo Losacco Toporcov
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using Chess.Core.Board;
 using Chess.Core.Board.Regions;
 using Chess.Core.Board.Topology;
 using Chess.Core.Games.Status;
 using Chess.Core.Movement;
 using Chess.Core.Movement.Orientation;
-using Chess.Core.Pieces;
 
 namespace Chess.Core.Games.Variants;
 
 public sealed class GameVariantDefinition
 {
-    private readonly IReadOnlyList<InitialPiecePlacement> _initialPlacements;
-
-    private readonly IRelativeDirectionResolver _relativeDirectionResolver;
-
-    private readonly IBoardRegionResolver _boardRegionResolver;
+    private readonly GameStateFactory _gameStateFactory;
 
     private readonly IGameMoveGenerator _moveGenerator;
 
-    private readonly IMoveExecutionResolver _moveExecutionResolver;
+    private readonly GameMoveResolver _moveResolver;
 
     private readonly IGameStatusEvaluator _statusEvaluator;
 
@@ -29,12 +23,12 @@ public sealed class GameVariantDefinition
 
     public string Name { get; }
 
-    public BoardTopology Topology { get; }
+    public BoardTopology Topology => _gameStateFactory.Topology;
 
-    public TurnOrder TurnOrder { get; }
+    public TurnOrder TurnOrder => _gameStateFactory.TurnOrder;
 
     public IReadOnlyList<InitialPiecePlacement> InitialPlacements =>
-        _initialPlacements;
+        _gameStateFactory.InitialPlacements;
 
     public GameVariantDefinition(
         GameVariantId id,
@@ -46,7 +40,28 @@ public sealed class GameVariantDefinition
         IGameMoveGenerator moveGenerator,
         IMoveExecutionResolver moveExecutionResolver,
         IGameStatusEvaluator statusEvaluator,
-        params InitialPiecePlacement[] initialPlacements)
+        params InitialPiecePlacement[] initialPlacements) : this(
+        id,
+        name,
+        new GameStateFactory(
+            topology,
+            turnOrder,
+            relativeDirectionResolver,
+            boardRegionResolver,
+            initialPlacements),
+        moveGenerator,
+        moveExecutionResolver,
+        statusEvaluator)
+    {
+    }
+
+    public GameVariantDefinition(
+        GameVariantId id,
+        string name,
+        GameStateFactory gameStateFactory,
+        IGameMoveGenerator moveGenerator,
+        IMoveExecutionResolver moveExecutionResolver,
+        IGameStatusEvaluator statusEvaluator)
     {
         ArgumentNullException.ThrowIfNull(id);
 
@@ -57,83 +72,29 @@ public sealed class GameVariantDefinition
                 nameof(name));
         }
 
-        ArgumentNullException.ThrowIfNull(topology);
-        ArgumentNullException.ThrowIfNull(turnOrder);
-        ArgumentNullException.ThrowIfNull(relativeDirectionResolver);
-        ArgumentNullException.ThrowIfNull(boardRegionResolver);
+        ArgumentNullException.ThrowIfNull(gameStateFactory);
         ArgumentNullException.ThrowIfNull(moveGenerator);
         ArgumentNullException.ThrowIfNull(moveExecutionResolver);
         ArgumentNullException.ThrowIfNull(statusEvaluator);
-        ArgumentNullException.ThrowIfNull(initialPlacements);
-
-        if (initialPlacements
-            .GroupBy(placement => placement.Square)
-            .Any(group => group.Count() > 1))
-        {
-            throw new ArgumentException(
-                "Initial piece placements cannot contain multiple pieces on the same square.",
-                nameof(initialPlacements));
-        }
-
-        foreach (var placement in initialPlacements)
-        {
-            if (!topology.Contains(placement.Square))
-            {
-                throw new ArgumentException(
-                    "An initial piece placement references a square outside the topology.",
-                    nameof(initialPlacements));
-            }
-
-            if (!turnOrder.Contains(placement.Side))
-            {
-                throw new ArgumentException(
-                    "An initial piece placement references a side outside the turn order.",
-                    nameof(initialPlacements));
-            }
-        }
 
         Id = id;
         Name = name.Trim();
 
-        Topology = topology;
-        TurnOrder = turnOrder;
-
-        _relativeDirectionResolver = relativeDirectionResolver;
-
-        _boardRegionResolver = boardRegionResolver;
-
+        _gameStateFactory = gameStateFactory;
         _moveGenerator = moveGenerator;
 
-        _moveExecutionResolver = moveExecutionResolver;
+        _moveResolver = new GameMoveResolver(
+            moveGenerator,
+            moveExecutionResolver);
 
         _statusEvaluator = statusEvaluator;
-
-        _initialPlacements = Array.AsReadOnly([.. initialPlacements]);
     }
 
     public Game CreateGame()
     {
-        var boardBuilder = new BoardStateBuilder(Topology);
+        var gameState = _gameStateFactory.Create();
 
-        foreach (var placement in _initialPlacements)
-        {
-            boardBuilder.PlacePiece(
-                placement.Square,
-                new Piece(placement.Side, placement.Definition));
-        }
-
-        var boardState = boardBuilder.Build();
-
-        var movementContext = new MovementContext(
-            boardState,
-            _relativeDirectionResolver,
-            _boardRegionResolver);
-
-        var gameState = new GameState(movementContext, TurnOrder);
-
-        var moveExecutor = new GameMoveExecutor(
-            _moveGenerator,
-            _moveExecutionResolver);
+        var moveExecutor = new GameMoveExecutor(_moveResolver);
 
         return new Game(
             this,

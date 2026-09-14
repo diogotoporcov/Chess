@@ -237,6 +237,57 @@ public sealed class StandardRepetitionEvaluatorTests
     }
 
     [Fact]
+    public void ReplayUsesFreshGameStateWithoutGameOrStatus()
+    {
+        var turnOrder = new TurnOrder(
+            SideDefinitions.White,
+            SideDefinitions.Black);
+        var placements = new[]
+        {
+            TestSupport.At(
+                "e1",
+                SideDefinitions.White,
+                PieceDefinitions.King),
+            TestSupport.At(
+                "e8",
+                SideDefinitions.Black,
+                PieceDefinitions.King),
+            TestSupport.At(
+                "g1",
+                SideDefinitions.White,
+                PieceDefinitions.Knight),
+            TestSupport.At(
+                "g8",
+                SideDefinitions.Black,
+                PieceDefinitions.Knight)
+        };
+        var executionResolver = TestSupport.CreateExecutionResolver();
+        var legalMoveGenerator =
+            TestSupport.CreateLegalMoveGenerator(executionResolver);
+        var gameStateFactory = TestSupport.CreateGameStateFactory(
+            turnOrder,
+            placements);
+        var sourceDefinition = TestSupport.CreateDefinition(
+            gameStateFactory,
+            legalMoveGenerator,
+            executionResolver,
+            new NonTerminatingStatusEvaluator());
+        var sourceGame = sourceDefinition.CreateGame();
+        PlayInitialPositionCycle(sourceGame);
+        var moveResolver = new GameMoveResolver(
+            legalMoveGenerator,
+            executionResolver);
+        var evaluator = new StandardRepetitionEvaluator(
+            new StandardPositionFactsEvaluator(legalMoveGenerator),
+            gameStateFactory.Create,
+            new GameMoveExecutor(moveResolver));
+
+        var facts = evaluator.Evaluate(sourceGame.State);
+
+        Assert.Equal(2, facts.CurrentPositionOccurrences);
+    }
+
+    [Fact]
     public void UndoAndReexecuteNaturallyChangeRepetitionFacts()
     {
         var game = Variant.CreateGame();
@@ -270,9 +321,18 @@ public sealed class StandardRepetitionEvaluatorTests
     private static StandardRepetitionEvaluator CreateEvaluator(
         GameVariantDefinition definition)
     {
+        var executionResolver = TestSupport.CreateExecutionResolver();
+        var legalMoveGenerator =
+            TestSupport.CreateLegalMoveGenerator(executionResolver);
+        var moveResolver = new GameMoveResolver(
+            legalMoveGenerator,
+            executionResolver);
+        var gameStateFactory = TestSupport.CreateGameStateFactory(definition);
+
         return new StandardRepetitionEvaluator(
             Variant.PositionFactsEvaluator,
-            definition.CreateGame);
+            gameStateFactory.Create,
+            new GameMoveExecutor(moveResolver));
     }
 
     private static void PlayInitialPositionCycle(

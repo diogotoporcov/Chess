@@ -170,6 +170,15 @@ public sealed class StandardHalfmoveRuleEvaluatorTests
     }
 
     [Fact]
+    public void ProspectiveEvaluationDelegatesNullStateValidation()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Variant.HalfmoveRuleEvaluator.WouldReachFiftyMoveThreshold(
+                null!,
+                default));
+    }
+
+    [Fact]
     public void ProspectiveEvaluationDoesNotMutateSourceGame()
     {
         var game = Variant.CreateGame();

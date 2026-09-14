@@ -92,36 +92,100 @@ internal static class TestSupport
         var executionResolver = CreateExecutionResolver();
         var simulator = new GameMoveSimulator(executionResolver);
         var checkDetector = new CheckDetector(new PatternAttackGenerator());
-        var pseudoLegalGenerator = new CastlingMoveGenerator(
-            new EnPassantMoveGenerator(
-                new PromotionMoveGenerator(new PseudoLegalGameMoveGenerator())),
-            simulator,
-            checkDetector);
-        var legalGenerator = new LegalMoveGenerator(
-            pseudoLegalGenerator,
-            simulator,
-            checkDetector);
+        var legalGenerator = CreateLegalMoveGenerator(simulator, checkDetector);
 
         IGameStatusEvaluator statusEvaluator = isStatusEvaluationEnabled
             ? new StatusEvaluator(legalGenerator, checkDetector)
             : new NonTerminatingStatusEvaluator();
 
+        return CreateDefinition(
+            turnOrder,
+            legalGenerator,
+            executionResolver,
+            statusEvaluator,
+            placements);
+    }
+
+    public static GameVariantDefinition CreateDefinition(
+        TurnOrder turnOrder,
+        IGameMoveGenerator legalMoveGenerator,
+        IMoveExecutionResolver executionResolver,
+        IGameStatusEvaluator statusEvaluator,
+        params Placement[] placements)
+    {
+        return CreateDefinition(
+            CreateGameStateFactory(turnOrder, placements),
+            legalMoveGenerator,
+            executionResolver,
+            statusEvaluator);
+    }
+
+    public static GameVariantDefinition CreateDefinition(
+        GameStateFactory gameStateFactory,
+        IGameMoveGenerator legalMoveGenerator,
+        IMoveExecutionResolver executionResolver,
+        IGameStatusEvaluator statusEvaluator)
+    {
         return new GameVariantDefinition(
             new GameVariantId("test:standard-position"),
             "Standard test position",
+            gameStateFactory,
+            legalMoveGenerator,
+            executionResolver,
+            statusEvaluator);
+    }
+
+    public static GameStateFactory CreateGameStateFactory(
+        TurnOrder turnOrder,
+        params Placement[] placements)
+    {
+        return new GameStateFactory(
             BoardTopologyFactory.Create(),
             turnOrder,
             Orientations.Resolver,
             BoardRegions.Resolver,
-            legalGenerator,
-            executionResolver,
-            statusEvaluator,
             placements
                 .Select(placement => new InitialPiecePlacement(
                     placement.Square,
                     placement.Side,
                     placement.Definition))
                 .ToArray());
+    }
+
+    public static GameStateFactory CreateGameStateFactory(
+        GameVariantDefinition definition)
+    {
+        return new GameStateFactory(
+            definition.Topology,
+            definition.TurnOrder,
+            Orientations.Resolver,
+            BoardRegions.Resolver,
+            [.. definition.InitialPlacements]);
+    }
+
+    public static IGameMoveGenerator CreateLegalMoveGenerator(
+        IMoveExecutionResolver executionResolver)
+    {
+        var simulator = new GameMoveSimulator(executionResolver);
+        var checkDetector = new CheckDetector(new PatternAttackGenerator());
+
+        return CreateLegalMoveGenerator(simulator, checkDetector);
+    }
+
+    private static LegalMoveGenerator CreateLegalMoveGenerator(
+        GameMoveSimulator simulator,
+        CheckDetector checkDetector)
+    {
+        var pseudoLegalGenerator = new CastlingMoveGenerator(
+            new EnPassantMoveGenerator(
+                new PromotionMoveGenerator(new PseudoLegalGameMoveGenerator())),
+            simulator,
+            checkDetector);
+
+        return new LegalMoveGenerator(
+            pseudoLegalGenerator,
+            simulator,
+            checkDetector);
     }
 
     public static IMoveExecutionResolver CreateExecutionResolver()

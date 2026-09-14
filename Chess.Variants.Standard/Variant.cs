@@ -48,6 +48,13 @@ public static class Variant
 
     private static VariantComponents CreateComponents()
     {
+        var gameStateFactory = new GameStateFactory(
+            BoardTopologyFactory.Create(),
+            TurnOrderDefinition.Instance,
+            Orientations.Resolver,
+            BoardRegions.Resolver,
+            CreateInitialPlacements());
+
         var executionResolver = new CompositeMoveExecutionResolver(
             new BasicMoveExecutionResolver(),
             new PromotionMoveExecutionResolver(),
@@ -71,6 +78,24 @@ public static class Variant
             moveSimulator,
             checkDetector);
 
+        var moveResolver = new GameMoveResolver(
+            legalMoveGenerator,
+            executionResolver);
+
+        var moveExecutor = new GameMoveExecutor(moveResolver);
+
+        var factsEvaluator = new StandardPositionFactsEvaluator(
+            legalMoveGenerator);
+
+        var repetitionEvaluator = new StandardRepetitionEvaluator(
+            factsEvaluator,
+            gameStateFactory.Create,
+            moveExecutor);
+
+        var halfmoveRuleEvaluator = new StandardHalfmoveRuleEvaluator(
+            factsEvaluator,
+            moveResolver);
+
         var statusEvaluator = new StatusEvaluator(
             legalMoveGenerator,
             checkDetector);
@@ -78,26 +103,10 @@ public static class Variant
         var definition = new GameVariantDefinition(
             new GameVariantId("chess:standard"),
             "Standard Chess",
-            BoardTopologyFactory.Create(),
-            TurnOrderDefinition.Instance,
-            Orientations.Resolver,
-            BoardRegions.Resolver,
+            gameStateFactory,
             legalMoveGenerator,
             executionResolver,
-            statusEvaluator,
-            CreateInitialPlacements());
-
-        var factsEvaluator = new StandardPositionFactsEvaluator(
-            legalMoveGenerator);
-
-        var repetitionEvaluator = new StandardRepetitionEvaluator(
-            factsEvaluator,
-            definition.CreateGame);
-
-        var halfmoveRuleEvaluator = new StandardHalfmoveRuleEvaluator(
-            factsEvaluator,
-            legalMoveGenerator,
-            executionResolver);
+            statusEvaluator);
 
         return new VariantComponents(
             definition,

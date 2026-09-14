@@ -83,8 +83,9 @@ public sealed class TurnOrderAndGameExecutionTests
             (whiteSquare, TestSupport.Piece()),
             (blackSquare, TestSupport.Piece(TestSupport.Black)));
         var executor = new GameMoveExecutor(
-            new FixedMoveGenerator(allowed),
-            new BasicMoveExecutionResolver());
+            new GameMoveResolver(
+                new FixedMoveGenerator(allowed),
+                new BasicMoveExecutionResolver()));
 
         Assert.Throws<InvalidOperationException>(() =>
             executor.Execute(state, new Move(emptySquare, whiteSquare)));
@@ -106,12 +107,13 @@ public sealed class TurnOrderAndGameExecutionTests
         var state = TestSupport.CreateState(topology, null, (from, piece));
         var before = GameStateSnapshot.Capture(state);
         var executor = new GameMoveExecutor(
-            new FixedMoveGenerator(move),
-            new DelegateResolver((_, _) => new MoveExecution(
-                new Move(from, different),
-                new BoardTransition(
-                    new BoardSquareChange(from, piece, null),
-                    new BoardSquareChange(to, null, piece)))));
+            new GameMoveResolver(
+                new FixedMoveGenerator(move),
+                new DelegateResolver((_, _) => new MoveExecution(
+                    new Move(from, different),
+                    new BoardTransition(
+                        new BoardSquareChange(from, piece, null),
+                        new BoardSquareChange(to, null, piece))))));
 
         Assert.Throws<InvalidOperationException>(() =>
             executor.Execute(state, move));
@@ -123,11 +125,24 @@ public sealed class TurnOrderAndGameExecutionTests
     {
         var state = TestSupport.CreateState(TestSupport.CreateGrid(1, 1));
         var executor = new GameMoveExecutor(
-            new FixedMoveGenerator(),
-            new BasicMoveExecutionResolver());
+            new GameMoveResolver(
+                new FixedMoveGenerator(),
+                new BasicMoveExecutionResolver()));
 
         Assert.Throws<InvalidOperationException>(() =>
             executor.UndoLastMove(state));
+    }
+
+    [Fact]
+    public void Executor_DelegatesNullStateValidationToMoveResolver()
+    {
+        var executor = new GameMoveExecutor(
+            new GameMoveResolver(
+                new FixedMoveGenerator(),
+                new BasicMoveExecutionResolver()));
+
+        Assert.Throws<ArgumentNullException>(() =>
+            executor.Execute(null!, default));
     }
 
     [Fact]

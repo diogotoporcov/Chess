@@ -10,22 +10,17 @@ public sealed class StandardHalfmoveRuleEvaluator
 {
     private readonly StandardPositionFactsEvaluator _positionFactsEvaluator;
 
-    private readonly IGameMoveGenerator _legalMoveGenerator;
-
-    private readonly IMoveExecutionResolver _executionResolver;
+    private readonly GameMoveResolver _moveResolver;
 
     public StandardHalfmoveRuleEvaluator(
         StandardPositionFactsEvaluator positionFactsEvaluator,
-        IGameMoveGenerator legalMoveGenerator,
-        IMoveExecutionResolver executionResolver)
+        GameMoveResolver moveResolver)
     {
         ArgumentNullException.ThrowIfNull(positionFactsEvaluator);
-        ArgumentNullException.ThrowIfNull(legalMoveGenerator);
-        ArgumentNullException.ThrowIfNull(executionResolver);
+        ArgumentNullException.ThrowIfNull(moveResolver);
 
         _positionFactsEvaluator = positionFactsEvaluator;
-        _legalMoveGenerator = legalMoveGenerator;
-        _executionResolver = executionResolver;
+        _moveResolver = moveResolver;
     }
 
     public StandardHalfmoveRuleFacts Evaluate(
@@ -43,26 +38,7 @@ public sealed class StandardHalfmoveRuleEvaluator
         GameState gameState,
         Move move)
     {
-        ArgumentNullException.ThrowIfNull(gameState);
-
-        var isLegal = _legalMoveGenerator
-            .GenerateMoves(gameState, move.From)
-            .Contains(move);
-
-        if (!isLegal)
-        {
-            throw new InvalidOperationException(
-                "Move is not allowed in the current game state.");
-        }
-
-        var execution = _executionResolver.Resolve(gameState, move);
-
-        if (execution.Move != move)
-        {
-            throw new InvalidOperationException(
-                "Move execution resolver returned an execution " +
-                "for a different move.");
-        }
+        var execution = _moveResolver.Resolve(gameState, move);
 
         var currentClock =
             _positionFactsEvaluator.EvaluateHalfmoveClock(gameState);

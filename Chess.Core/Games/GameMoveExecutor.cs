@@ -7,56 +7,21 @@ namespace Chess.Core.Games;
 
 public sealed class GameMoveExecutor
 {
-    private readonly IGameMoveGenerator _moveGenerator;
-
-    private readonly IMoveExecutionResolver _executionResolver;
+    private readonly GameMoveResolver _moveResolver;
 
     public GameMoveExecutor(
-        IGameMoveGenerator moveGenerator,
-        IMoveExecutionResolver executionResolver)
+        GameMoveResolver moveResolver)
     {
-        ArgumentNullException.ThrowIfNull(moveGenerator);
-        ArgumentNullException.ThrowIfNull(executionResolver);
+        ArgumentNullException.ThrowIfNull(moveResolver);
 
-        _moveGenerator = moveGenerator;
-        _executionResolver = executionResolver;
+        _moveResolver = moveResolver;
     }
 
     public GameMoveRecord Execute(
         GameState gameState,
         Move move)
     {
-        ArgumentNullException.ThrowIfNull(gameState);
-
-        if (!gameState.BoardState.TryGetPiece(move.From, out var movingPiece))
-        {
-            throw new InvalidOperationException(
-                "Move origin does not contain a piece.");
-        }
-
-        if (movingPiece.Side != gameState.CurrentSide)
-        {
-            throw new InvalidOperationException(
-                "The piece does not belong to the side whose turn it is.");
-        }
-
-        var isAllowed = _moveGenerator
-            .GenerateMoves(gameState, move.From)
-            .Contains(move);
-
-        if (!isAllowed)
-        {
-            throw new InvalidOperationException(
-                "Move is not allowed in the current game state.");
-        }
-
-        var execution = _executionResolver.Resolve(gameState, move);
-
-        if (execution.Move != move)
-        {
-            throw new InvalidOperationException(
-                "Move execution resolver returned an execution for a different move.");
-        }
+        var execution = _moveResolver.Resolve(gameState, move);
 
         gameState.BoardState.ApplyTransition(execution.Transition);
 
